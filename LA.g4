@@ -2,7 +2,7 @@ grammar LA;
 
 @members{
 static String grupo = "<489131, 489468, 408620>";
-PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
+//PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
 }
 
 //Programa é composto por declarações definidas abaixo, palavra reservada algoritmo
@@ -10,7 +10,7 @@ PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
 programa : declaracoes 'algoritmo' corpo 'fim_algoritmo';
 
 //Declaração é formada por uma declaração global seguida de uma delcaração ou vazio
-declaracoes : decl_local_global declaracoes | ;
+declaracoes : (decl_local_global declaracoes)* ;
 
 //Define a decl_local_global sendo uma delcaração local ou global
 decl_local_global : declaracao_local | declaracao_global;
@@ -26,7 +26,7 @@ declaracao_local : 'declare' variavel
 variavel : IDENT dimensao mais_var ':' tipo;
 
 //Permite que seja declarada mais de uma variável do mesmo tipo separando por virgulas
-mais_var : ',' IDENT dimensao mais_var | ;
+mais_var : (',' IDENT dimensao)*;
 
 //Identificador pode iniciar com 0 ou mais ^ seguido de um identificador,
 //Podendo ou não ter uma dimensão e podendo ou não ser composto de outros identificadores
@@ -34,44 +34,64 @@ mais_var : ',' IDENT dimensao mais_var | ;
 identificador : ponteiros_opcionais IDENT dimensao outros_ident;
 
 //ponteiros_opcionais são compostos por zero ou mais ^
-ponteiros_opcionais : '^' ponteiros_opcionais | ;
+ponteiros_opcionais : ('^' ponteiros_opcionais)* ;
 
 //outros_ident permite a separação dos identificadores por virgula
-outros_ident : '.' identificador | ;
+outros_ident : '.' identificador |  ;
 
 //Define a dimensão sendo zero ou mais sequencidas de [expressão]
-dimensao : '[' exp_aritmetica ']' dimensao | ;
+dimensao : ('[' exp_aritmetica ']' dimensao)* ;
 
-
+//Tipo é definido como um registro ("registro" v1, v2 ... "fim registro") ou
+// um ponteiro (^) seguido de um tipo básico
 tipo : registro | tipo_estendido;
 
-mais_ident : ',' identificador mais_ident | ;
+//mais identificadores composto de ',' e outro identificador
+mais_ident : (',' identificador mais_ident)* ;
 
-mais_variaveis : variavel mais_variaveis | ;
+//definido como uma variável seguida de outra
+mais_variaveis : (variavel mais_variaveis)* ;
 
+//Define as palavres reservadas para um tipo basico
 tipo_basico : 'literal' | 'inteiro' | 'real' | 'logico' ;
 
+//Define um tipo basico ou um identificador
 tipo_basico_ident : tipo_basico | IDENT ;
 
+//tipo estendido é definido como um ponteiro seguido de um identificador de tipo básico
 tipo_estendido : ponteiros_opcionais tipo_basico_ident;
 
+//valor constante pode ser composto por verdadeiro ou falso ou uma cadeia ou um numero real ou inteiro
 valor_constante : CADEIA | NUM_INT | NUM_REAL | 'verdadeiro' | 'falso' ;
 
+//registro é composto pela palavra reservada "registro" seguido de uma ou mais variáveis e
+//finalizado pela palavra reservada "fim_registro"
 registro : 'registro' variavel mais_variaveis 'fim_registro';
 
+//Uma declaração é composta por "procedimento nome_procedimento (parametros)" seguido de 
+//declarações e comandos terminado pela palavra reservada "fim_procedimento" ou
+//composta por "funcao nome_funcao (parametros) :" seguido de um tipo estendido, 
+//declarações e comandos, sendo terminado por "fim_funcao"
 declaracao_global : 'procedimento' IDENT '(' parametros_opcional ')' declaracoes_locais comandos 'fim_procedimento'
                   | 'funcao' IDENT '(' parametros_opcional ')' ':' tipo_estendido declaracoes_locais comandos 'fim_funcao';
 
+//parametro opcional é formado por parametro
 parametros_opcional : parametro | ;
 
+//parametro é formado por uma variavel opcional, um ou mais indentificadores seguido de ":"
+//e um tipo estendido seguido de mais parametros
 parametro : var_opcional identificador mais_ident ':' tipo_estendido mais_parametros;
 
+//var opcional é definido como a palavra reservada "var"
 var_opcional : 'var' | ;
 
+//mais parametros permite separar os parametros por virgula
 mais_parametros : ',' parametro | ;
 
-declaracoes_locais : declaracao_local declaracoes_locais | ;
+//declarações locais são compostas por uma ou mais declarações locais
+declaracoes_locais : (declaracao_local declaracoes_locais)* ;
 
+//um corpo é formado por uma ou mais declarações locais seguida de um ou mais comandos
 corpo : declaracoes_locais comandos;
 
 //Define que os commandos devem possuir ao menos uma instrução e podem ser seguidos de mais
@@ -90,54 +110,93 @@ cmd : 'leia' '(' identificador mais_ident ')'
     | 'retorne' expressao;
 
 //Permite que exista mais de uma expressão, separando-as por vírgula
-mais_expressao : ',' expressao mais_expressao | ;
+mais_expressao : (',' expressao mais_expressao)* ;
 
-
+//Define o comando senao que deve ser acompanhado ou não por outros comandos
 senao_opcional : 'senao' comandos | ;
 
+//chamada de atribuição é composta por argumentos opcionais entre parenteses ou
+//um ou mais identificador podendo ou não ser mais dimensões seguido de "<-" expressão
 chamada_atribuicao : '(' argumentos_opcional ')' | outros_ident dimensao '<-' expressao;
 
+//argumento opcional é composto por uma ou mais expressões
 argumentos_opcional : expressao mais_expressao | ;
 
+//selação é composta por uma constante seguida de : comandos e selação
 selecao : constantes ':' comandos mais_selecao;
 
+//mais selação é composta por uma selação (definida acima)
 mais_selecao : selecao | ;
 
+//Constantes são definidas como um intervalo no formato numero..numero e mais constantes separadas
+//por virgula
 constantes : numero_intervalo mais_constantes;
 
+//mais constantes permite separar as constantes por virgula
 mais_constantes : ',' constantes | ;
 
+//definida por um operador unário ou não seguido de um numero inteiro e um intervalo operacional (..)
 numero_intervalo : op_unario NUM_INT intervalo_opcional;
 
+//intervalo operacional é composto por ".." seguido ou não de um op_unario e seguido de um numero
+//inteiro
 intervalo_opcional : '..' op_unario NUM_INT | ;
 
+//Define o op_unario como "-"
 op_unario : '-' | ;
 
+//Expressẽos aritiméticas são compostas por um ou mais termos separados por virgulas
 exp_aritmetica : termo outros_termos;
 
+//Define as operaçẽs de multiplicação com sendo multiplicação e divisão
 op_multiplicacao : '*' | '/';
 
+//Define as operações de adição como sendo soma e subtração
 op_adicao : '+' | '-';
 
+//Termo é composto por um ou mais fatores separados por virgula
 termo : fator outros_fatores;
 
+//outros termos é composto por uma operação de soma ou subtração seguida de um ou mais termos
+//separados por virgula
 outros_termos : op_adicao termo outros_termos | ;
 
+//fator é uma ou mais parecelas separadas por virgula
 fator : parcela outras_parcelas;
 
+//outros fatores é composto por operações de multiplicação ou divisão e um ou mais fatores separados
+//por virgula
 outros_fatores : op_multiplicacao fator outros_fatores | ;
 
+//parecela é composta por um operador unario seguido de uma parecela unária ou
+//seguido por uma parecela não unária
 parcela : op_unario parcela_unario | parcela_nao_unario;
 
-parcela_unario : '^' IDENT outros_ident dimensao | IDENT chamada_partes | NUM_INT | NUM_REAL | '(' expressao ')';
+//parcela_unario é composta de um ponteiro (^) seguido de um identificador podendo ou não ter 
+//uma dimensão ou
+//um identificador seguido de uma chamada *** ou
+//um número inteiro ou
+//um número real ou
+//uma expressão entre parenteses
+parcela_unario : '^' IDENT outros_ident dimensao 
+                 | IDENT chamada_partes 
+                 | NUM_INT 
+                 | NUM_REAL 
+                 | '(' expressao ')';
 
+//Parcela não unario é composta pela operação AND seguida de um ou mais identificadores separados
+//por vírgula, podendo ou não ter uma dimensão.
+//também pode ser composto por uma sequencia de caracteres diferentes de \n ou \r
 parcela_nao_unario : '&' IDENT outros_ident dimensao | CADEIA;
 
+//Composto pela operação modulo seguida de uma ou mais parcelas separadas por vírgula
 outras_parcelas : '%' parcela outras_parcelas | ;
 
+//chamada partes é definida por uma ou mais expressões separadas por vírgula entre parentes ou
+// por identificadores, também separados por virgulas podendo ou não ter alguma dimensão
 chamada_partes : '(' expressao mais_expressao ')' | outros_ident dimensao | ;
 
-
+//Define a expressão relacinal como uma expressão aritimética seguida de um operadr opcional ou não
 exp_relacional : exp_aritmetica op_opcional;
 
 //Diz que uma op_opcional é uma operação relacional seguida de uma expressão aritimética
@@ -152,11 +211,15 @@ expressao : termo_logico outros_termos_logicos;
 //op_nao pode ser nao ou vazio
 op_nao : 'nao' | ;
 
+//Um termo lógico é composto por um ou mais fatores lógicos separados por virgula
 termo_logico : fator_logico outros_fatores_logicos;
 
+//outros termos lógicos são compostos pela operação OR seguida de um ou mais termos lógicos separados
+//por virgula
 outros_termos_logicos : 'ou' termo_logico outros_termos_logicos | ;
 
-
+//outros fatores lógicos é composto pela operação AND seguida por um ou mais fatores lógicos
+//separados por virgula
 outros_fatores_logicos : 'e' fator_logico outros_fatores_logicos | ;
 
 //fator_logico é uma parecela lógica, negada ou não (pos op_nao leva à vazio)
@@ -171,6 +234,7 @@ IDENT : ('a'..'z' | 'A'..'Z' | '_') ('a'..'z' | 'A'..'Z' | '0'..'9' | '_')*;
 
 //Sequência de um ou mais numeros entre 0 e 9
 NUM_INT : ('0'..'9')+;
+
 //Inicia com um número entre 0 e 9 seguido de quantos números quiser, mas deve haver
 //ao menos um, seguido de um ponto e outra sequencia de números entre 0 ou 9 tendo ao menos
 //um número
@@ -178,5 +242,6 @@ NUM_REAL : ('0'..'9')+ '.' ('0'..'9')+;
 
 //Todos os caracteres que não são quebra de linha ou "retorno do cursor"
 CADEIA : '"' ~('\n' | '\r' | '"')* '"';
+
 //Tudo entre {} 
 COMENTARIO : '{' .* '}' {skip();};
