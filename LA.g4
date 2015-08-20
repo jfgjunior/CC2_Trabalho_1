@@ -10,7 +10,7 @@ static String grupo = "<489131, 489468, 408620>";
 programa : declaracoes 'algoritmo' corpo 'fim_algoritmo';
 
 //Declaração é formada por uma declaração global seguida de uma delcaração ou vazio
-declaracoes : (decl_local_global declaracoes)* ;
+declaracoes : decl_local_global*;
 
 //Define a decl_local_global sendo uma delcaração local ou global
 decl_local_global : declaracao_local | declaracao_global;
@@ -34,23 +34,23 @@ mais_var : (',' IDENT dimensao)*;
 identificador : ponteiros_opcionais IDENT dimensao outros_ident;
 
 //ponteiros_opcionais são compostos por zero ou mais ^
-ponteiros_opcionais : ('^' ponteiros_opcionais)* ;
+ponteiros_opcionais : '^'*;
 
 //outros_ident permite a separação dos identificadores por virgula
 outros_ident : '.' identificador |  ;
 
 //Define a dimensão sendo zero ou mais sequencidas de [expressão]
-dimensao : ('[' exp_aritmetica ']' dimensao)* ;
+dimensao : ('[' exp_aritmetica ']')*;
 
 //Tipo é definido como um registro ("registro" v1, v2 ... "fim registro") ou
 // um ponteiro (^) seguido de um tipo básico
 tipo : registro | tipo_estendido;
 
 //mais identificadores composto de ',' e outro identificador
-mais_ident : (',' identificador mais_ident)* ;
+mais_ident : (',' identificador)* ;
 
 //definido como uma variável seguida de outra
-mais_variaveis : (variavel mais_variaveis)* ;
+mais_variaveis : variavel*;
 
 //Define as palavres reservadas para um tipo basico
 tipo_basico : 'literal' | 'inteiro' | 'real' | 'logico' ;
@@ -89,7 +89,7 @@ var_opcional : 'var' | ;
 mais_parametros : ',' parametro | ;
 
 //declarações locais são compostas por uma ou mais declarações locais
-declaracoes_locais : (declaracao_local declaracoes_locais)* ;
+declaracoes_locais : declaracao_local*;
 
 //um corpo é formado por uma ou mais declarações locais seguida de um ou mais comandos
 corpo : declaracoes_locais comandos;
@@ -110,7 +110,7 @@ cmd : 'leia' '(' identificador mais_ident ')'
     | 'retorne' expressao;
 
 //Permite que exista mais de uma expressão, separando-as por vírgula
-mais_expressao : (',' expressao mais_expressao)* ;
+mais_expressao : (',' expressao)* ;
 
 //Define o comando senao que deve ser acompanhado ou não por outros comandos
 senao_opcional : 'senao' comandos | ;
@@ -159,14 +159,14 @@ termo : fator outros_fatores;
 
 //outros termos é composto por uma operação de soma ou subtração seguida de um ou mais termos
 //separados por virgula
-outros_termos : op_adicao termo outros_termos | ;
+outros_termos : (op_adicao termo)*;
 
 //fator é uma ou mais parecelas separadas por virgula
 fator : parcela outras_parcelas;
 
 //outros fatores é composto por operações de multiplicação ou divisão e um ou mais fatores separados
 //por virgula
-outros_fatores : op_multiplicacao fator outros_fatores | ;
+outros_fatores : (op_multiplicacao fator)*;
 
 //parecela é composta por um operador unario seguido de uma parecela unária ou
 //seguido por uma parecela não unária
@@ -190,7 +190,7 @@ parcela_unario : '^' IDENT outros_ident dimensao
 parcela_nao_unario : '&' IDENT outros_ident dimensao | CADEIA;
 
 //Composto pela operação modulo seguida de uma ou mais parcelas separadas por vírgula
-outras_parcelas : '%' parcela outras_parcelas | ;
+outras_parcelas : ('%' parcela)*;
 
 //chamada partes é definida por uma ou mais expressões separadas por vírgula entre parentes ou
 // por identificadores, também separados por virgulas podendo ou não ter alguma dimensão
@@ -245,3 +245,5 @@ CADEIA : '"' ~('\n' | '\r' | '"')* '"';
 
 //Tudo entre {} 
 COMENTARIO : '{' .* '}' {skip();};
+
+ESPACO : ( ' ' |'\t' | '\r' | '\n') {skip();};
