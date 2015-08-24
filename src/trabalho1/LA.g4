@@ -244,6 +244,6 @@ NUM_REAL : ('0'..'9')+ '.' ('0'..'9')+;
 CADEIA : '"' ~('\n' | '\r' | '"')* '"';
 
 //Tudo entre {} 
-COMENTARIO : '{' .* '}' {skip();};
+COMENTARIO : '{' ~'}' '}' {skip();};
 
 ESPACO : ( ' ' |'\t' | '\r' | '\n') {skip();};
