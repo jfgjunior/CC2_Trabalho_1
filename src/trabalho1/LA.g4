@@ -8,7 +8,8 @@ PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
 //Programa é composto por declarações definidas abaixo, palavra reservada algoritmo
 //um corpo que também é definido abaixo e termina com a palavra reservada fim_algoritmo
 
-programa : declaracoes 'algoritmo' corpo 'fim_algoritmo';
+programa : {pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));}
+           declaracoes 'algoritmo' corpo 'fim_algoritmo';
 
 //Declaração é formada por uma declaração global seguida de uma delcaração ou vazio
 
@@ -23,23 +24,24 @@ decl_local_global : declaracao_local | declaracao_global;
 //ou pela palavra reservada "tipo" seguida de um identificador, dois pontos e o tipo
 
 declaracao_local : 'declare' variavel
-                 | 'constante' IDENT ':' tipo_basico '=' valor_constante {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.getText(),$tipo_basico.tipodado, "constante");}
+                 | 'constante' IDENT ':' tipo_basico '=' valor_constante
                  | 'tipo' IDENT ':' tipo;
 
 //uma variável é do tipo "nome[expressão]" ou "nome" seguido de dois pontos e o tipo
 
-variavel : IDENT dimensao mais_var ':' tipo 
+variavel : IDENT dimensao mais_var ':' tipo
          {  List<String> nomes = new ArrayList<String>();
             nomes = $mais_var.nomes; 
             nomes.add(0, $IDENT.getText());
             pilhaDeTabelas.topo().adicionarSimbolos(nomes, $tipo.tipodado, "variavel");
          };
+         
 
 //Permite que seja declarada mais de uma variável do mesmo tipo separando por virgulas
 
 mais_var returns [List<String> nomes]
 @init { $nomes = new ArrayList<String>(); }
-    : (',' IDENT dimensao {$nomes.add($IDENT.getText();})*;
+    : (',' IDENT dimensao {$nomes.add($IDENT.getText());})*;
 
 //Identificador pode iniciar com 0 ou mais ^ seguido de um identificador,
 //Podendo ou não ter uma dimensão e podendo ou não ser composto de outros identificadores
@@ -51,7 +53,7 @@ identificador : ponteiros_opcionais IDENT dimensao outros_ident;
 
 ponteiros_opcionais returns [String ponteiros]
 @init {$ponteiros = "";}
-    : ('^'{$ponteiros += "^"})*;
+    : ('^'{$ponteiros += "^";})*;
 
 //outros_ident permite a separação dos identificadores por virgula
 
@@ -78,8 +80,8 @@ mais_variaveis : variavel*;
 //Define as palavres reservadas para um tipo basico
 
 tipo_basico returns [String tipodado]
-    : 'literal' {$tipodado = 'literal';}| 'inteiro' {$tipodado = 'inteiro';}
-    | 'real' {$tipodado = 'real';}| 'logico' {$tipodado = 'logico';};
+    : 'literal' {$tipodado = "literal";}| 'inteiro' {$tipodado = "inteiro";}
+    | 'real' {$tipodado = "real";}| 'logico' {$tipodado = "logico";};
 
 //Define um tipo basico ou um identificador
 
@@ -323,6 +325,6 @@ CADEIA : '"' ~('\n' | '\r' | '"')* '"';
 
 //Tudo entre {} 
 
-COMENTARIO : '{' ~'}' '}' {skip();};
+COMENTARIO : '{' (~'}')* '}' {skip();};
 
 ESPACO : ( ' ' |'\t' | '\r' | '\n') {skip();};
