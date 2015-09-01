@@ -1,9 +1,16 @@
 grammar LA;
 
+
 @members{
 static String grupo = "<489131, 489468, 408620>";
 PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
+
+private void stop(String msg)
+   {
+      throw new ParseCancellationException(msg);
+   }
 }
+
 
 //Programa é composto por declarações definidas abaixo, palavra reservada algoritmo
 //um corpo que também é definido abaixo e termina com a palavra reservada fim_algoritmo
@@ -149,7 +156,8 @@ cmd : 'leia' '(' identificador mais_ident ')'
     | 'para' IDENT '<-' exp_aritmetica 'ate' exp_aritmetica 'faca' comandos 'fim_para'
     | 'enquanto' expressao 'faca' comandos 'fim_enquanto'
     | 'faca' comandos 'ate' expressao
-    | '^' IDENT chamada_atribuicao
+    | '^' IDENT outros_ident dimensao '<-' expressao
+    | IDENT chamada_atribuicao
     | 'retorne' expressao;
 
 //Permite que exista mais de uma expressão, separando-as por vírgula
@@ -323,8 +331,19 @@ NUM_REAL : ('0'..'9')+ '.' ('0'..'9')+;
 
 CADEIA : '"' ~('\n' | '\r' | '"')* '"';
 
+//CADEIA_ERRADA : '"' ~('\n' | '\r' | '"')* '\n'
+  //              { stop("Linha "+getLine()+": "+getText()+" - simbolo nao identificado");
+                 
 //Tudo entre {} 
 
 COMENTARIO : '{' (~'}')* '}' {skip();};
 
 ESPACO : ( ' ' |'\t' | '\r' | '\n') {skip();};
+
+COMENTARIO_ERRADO
+    : '{' ~('\r'|'\n'|'}')* '\n' 
+      { stop("Linha "+getLine()+": comentario nao fechado"); }
+    ;
+ERROR
+    : . { stop("Linha "+getLine()+": "+getText()+" - simbolo nao identificado"); }
+    ;

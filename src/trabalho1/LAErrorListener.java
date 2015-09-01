@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 public class LAErrorListener implements ANTLRErrorListener {
     SaidaParser sp;
@@ -21,7 +22,11 @@ public class LAErrorListener implements ANTLRErrorListener {
     public void syntaxError(Recognizer<?, ?> rcgnzr, Object o, int i, int i1, String string, RecognitionException re) {
         int indice = string.indexOf("expecting");
         CommonToken t = (CommonToken) o;
-        sp.println("Linha " + i + ": erro sintatico proximo a " + t.getText());
+        String text = t.getText();
+        if (text.contentEquals("<EOF>"))
+                text = "EOF";
+        sp.println("Linha " + i + ": erro sintatico proximo a " + text);
+        throw new ParseCancellationException();
     }
 
     @Override

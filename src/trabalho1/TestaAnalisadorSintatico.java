@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 public class TestaAnalisadorSintatico {
 
@@ -17,7 +18,13 @@ public class TestaAnalisadorSintatico {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         LAParser parser = new LAParser(tokens);
         parser.addErrorListener(new LAErrorListener(out));
-        parser.programa();
+        try {
+            parser.programa();
+        } catch(ParseCancellationException pce) {
+            if (pce.getMessage() != null)
+                out.println(pce.getMessage());
+        }
+        
         out.println("Fim da compilacao");
 
         File f = new File(args[1]);
