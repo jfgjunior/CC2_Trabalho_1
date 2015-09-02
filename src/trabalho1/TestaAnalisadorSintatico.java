@@ -11,7 +11,8 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 public class TestaAnalisadorSintatico {
 
-    public static void main(String args[]) throws IOException, RecognitionException {
+    public static void main(String args[]) throws IOException, RecognitionException
+    {
         SaidaParser out = new SaidaParser();
         ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(new File(args[0])));
         LALexer lexer = new LALexer(input);

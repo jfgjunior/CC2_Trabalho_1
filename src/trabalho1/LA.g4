@@ -68,7 +68,7 @@ outros_ident : ('.' identificador)?;
 
 //Define a dimensão sendo zero ou mais sequencidas de [expressão]
 
-dimensao : ('[' exp_aritmetica ']')*;
+dimensao : ('[' exp_aritmetica ']'{skip());})*;
 
 //Tipo é definido como um registro ("registro" v1, v2 ... "fim registro") ou
 // um ponteiro (^) seguido de um tipo básico

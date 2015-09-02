@@ -20,7 +20,7 @@ public class LAErrorListener implements ANTLRErrorListener {
 
     @Override
     public void syntaxError(Recognizer<?, ?> rcgnzr, Object o, int i, int i1, String string, RecognitionException re) {
-        int indice = string.indexOf("expecting");
+        //int indice = string.indexOf("expecting");
         CommonToken t = (CommonToken) o;
         String text = t.getText();
         if (text.contentEquals("<EOF>"))
