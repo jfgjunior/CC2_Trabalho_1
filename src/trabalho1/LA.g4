@@ -68,7 +68,7 @@ outros_ident : ('.' identificador)?;
 
 //Define a dimensão sendo zero ou mais sequencidas de [expressão]
 
-dimensao : ('[' exp_aritmetica ']'{skip());})*;
+dimensao : ('[' exp_aritmetica ']')*;
 
 //Tipo é definido como um registro ("registro" v1, v2 ... "fim registro") ou
 // um ponteiro (^) seguido de um tipo básico
@@ -317,9 +317,15 @@ parcela_logica : 'verdadeiro' | 'falso' | exp_relacional;
 
 IDENT : ('a'..'z' | 'A'..'Z' | '_') ('a'..'z' | 'A'..'Z' | '0'..'9' | '_')*;
 
+IDENT_ERRADO : '[' IDENT ')' {stop("Linha "+getLine()+": erro sintatico proximo a )");};
+
 //Sequência de um ou mais numeros entre 0 e 9
 
 NUM_INT : ('0'..'9')+;
+
+NUM_ERRADO : ('0'..'9')+ ('a'..'z' | 'A'..'Z' | '_')+ 
+             {String variavel = getText().replaceAll("[0-9]","");
+              stop("Linha "+getLine()+": erro sintatico proximo a " + variavel);};
 
 //Inicia com um número entre 0 e 9 seguido de quantos números quiser, mas deve haver
 //ao menos um, seguido de um ponto e outra sequencia de números entre 0 ou 9 tendo ao menos
