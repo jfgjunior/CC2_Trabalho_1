@@ -25,7 +25,8 @@ public class TestaAnalisadorSintatico {
             if (pce.getMessage() != null)
                 out.println(pce.getMessage());
         }
-        
+        String erros_semanticos = Mensagens.getText();
+        out.print(erros_semanticos);
         out.println("Fim da compilacao");
 
         File f = new File(args[1]);

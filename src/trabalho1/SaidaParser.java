@@ -20,6 +20,10 @@ public class SaidaParser {
         conteudo.append("\n");
     }
     
+    public void print(String texto) {
+        conteudo.append(texto);
+    }
+    
     public boolean isModificado() {
         return modificado;
     }

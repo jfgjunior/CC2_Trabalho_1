@@ -5,8 +5,7 @@ grammar LA;
 static String grupo = "<489131, 489468, 408620>";
 PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
 
-private void stop(String msg)
-   {
+private void stop(String msg) {
       throw new ParseCancellationException(msg);
    }
 }
@@ -16,7 +15,8 @@ private void stop(String msg)
 //um corpo que também é definido abaixo e termina com a palavra reservada fim_algoritmo
 
 programa : {pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));}
-           declaracoes 'algoritmo' corpo 'fim_algoritmo';
+           declaracoes 'algoritmo' corpo 'fim_algoritmo'
+           {pilhaDeTabelas.desempilhar();};
 
 //Declaração é formada por uma declaração global seguida de uma delcaração ou vazio
 
@@ -32,29 +32,39 @@ decl_local_global : declaracao_local | declaracao_global;
 
 declaracao_local : 'declare' variavel
                  | 'constante' IDENT ':' tipo_basico '=' valor_constante
+                   {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_basico.tipodado, "constante");}
                  | 'tipo' IDENT ':' tipo;
 
 //uma variável é do tipo "nome[expressão]" ou "nome" seguido de dois pontos e o tipo
 
 variavel : IDENT dimensao mais_var ':' tipo
-         {  List<String> nomes = new ArrayList<String>();
-            nomes = $mais_var.nomes; 
-            nomes.add(0, $IDENT.getText());
-            pilhaDeTabelas.topo().adicionarSimbolos(nomes, $tipo.tipodado, "variavel");
+         {  List<Pair> nomes = new ArrayList<Pair>();
+            nomes = $mais_var.nomes;
+            Pair pair = new Pair($IDENT.text, $IDENT.line);
+            nomes.add(0, pair);
+            for (Pair var : nomes) {
+                if(!pilhaDeTabelas.existeSimbolo(var.a.toString()))
+                    pilhaDeTabelas.topo().adicionarSimbolo(var.a.toString(), $tipo.tipodado, "variavel");
+                else
+                    Mensagens.erroVariavelJaExiste(var.a.toString(), Integer.parseInt(var.b.toString()));
+                
+            }
          };
          
 
 //Permite que seja declarada mais de uma variável do mesmo tipo separando por virgulas
 
-mais_var returns [List<String> nomes]
-@init { $nomes = new ArrayList<String>(); }
-    : (',' IDENT dimensao {$nomes.add($IDENT.getText());})*;
+mais_var returns [List<Pair> nomes, ]
+@init { $nomes = new ArrayList<Pair>(); }
+    : (',' IDENT dimensao {Pair pair = new Pair($IDENT.text, $IDENT.line); $nomes.add(pair);})*;
 
 //Identificador pode iniciar com 0 ou mais ^ seguido de um identificador,
 //Podendo ou não ter uma dimensão e podendo ou não ser composto de outros identificadores
 //separados por virgula
 
-identificador : ponteiros_opcionais IDENT dimensao outros_ident;
+identificador : ponteiros_opcionais IDENT dimensao outros_ident 
+                {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
+                     Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);};
 
 //ponteiros_opcionais são compostos por zero ou mais ^
 
@@ -93,7 +103,7 @@ tipo_basico returns [String tipodado]
 //Define um tipo basico ou um identificador
 
 tipo_basico_ident returns [String tipodado]
-    : tipo_basico {$tipodado = $tipo_basico.tipodado;}| IDENT {$tipodado = $IDENT.getText();};
+    : tipo_basico {$tipodado = $tipo_basico.tipodado;}| IDENT {$tipodado = $IDENT.text;};
 
 //tipo estendido é definido como um ponteiro seguido de um identificador de tipo básico
 
@@ -250,7 +260,8 @@ parcela : op_unario parcela_unario | parcela_nao_unario;
 //uma expressão entre parenteses
 
 parcela_unario : '^' IDENT outros_ident dimensao 
-                 | IDENT chamada_partes 
+                 | IDENT chamada_partes {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
+                                             Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);}
                  | NUM_INT 
                  | NUM_REAL 
                  | '(' expressao ')';

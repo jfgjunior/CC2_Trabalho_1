@@ -59,8 +59,7 @@ public class LALexer extends Lexer {
 	static String grupo = "<489131, 489468, 408620>";
 	PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
 
-	private void stop(String msg)
-	   {
+	private void stop(String msg) {
 	      throw new ParseCancellationException(msg);
 	   }
 

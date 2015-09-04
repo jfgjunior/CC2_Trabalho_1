@@ -9,7 +9,17 @@ package trabalho1;
  * @author daniel
  */
 public class Mensagens {
-    public static void erroVariavelNaoExiste(int numLinha, int numColuna, String variavel) {
-        Saida.println(numLinha+","+(numColuna+1)+":Variavel "+variavel+" nao amarrada");
+    private static StringBuffer text = new StringBuffer();
+    
+    public static void erroVariavelJaExiste(String var, int line) {
+        text.append("Linha "+line +": identificador "+var+" ja declarado anteriormente").append('\n');
+    }
+    
+    public static void erroVariavelNaoExiste(String var, int line) {
+        text.append("Linha "+line +": identificador "+var+" nao declarado").append('\n');
+    }
+    
+    public static String getText() {
+        return text.toString();
     }
 }
