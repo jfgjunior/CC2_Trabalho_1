@@ -2,17 +2,17 @@ grammar LA;
 
 
 @members{
-static String grupo = "<489131, 489468, 408620>";
 PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
+Tipos tipos = new Tipos();
 
 private void stop(String msg) {
       throw new ParseCancellationException(msg);
-   }
+}
 }
 
 
-//Programa é composto por declarações definidas abaixo, palavra reservada algoritmo
-//um corpo que também é definido abaixo e termina com a palavra reservada fim_algoritmo
+//Um programa na linguagem LA é composto por declarações de variáveis, palavra
+//reservada algoritmo um corpo de comandos e termina com a palavra reservada fim_algoritmo
 
 programa : {pilhaDeTabelas.empilhar(new TabelaDeSimbolos("global"));}
            declaracoes 'algoritmo' corpo 'fim_algoritmo'
@@ -33,7 +33,8 @@ decl_local_global : declaracao_local | declaracao_global;
 declaracao_local : 'declare' variavel
                  | 'constante' IDENT ':' tipo_basico '=' valor_constante
                    {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_basico.tipodado, "constante");}
-                 | 'tipo' IDENT ':' tipo;
+                 | 'tipo' IDENT ':' tipo
+                   {tipos.addTipo($IDENT.text, $tipo.atributos);};
 
 //uma variável é do tipo "nome[expressão]" ou "nome" seguido de dois pontos e o tipo
 
@@ -54,7 +55,7 @@ variavel : IDENT dimensao mais_var ':' tipo
 
 //Permite que seja declarada mais de uma variável do mesmo tipo separando por virgulas
 
-mais_var returns [List<Pair> nomes, ]
+mais_var returns [List<Pair> nomes]
 @init { $nomes = new ArrayList<Pair>(); }
     : (',' IDENT dimensao {Pair pair = new Pair($IDENT.text, $IDENT.line); $nomes.add(pair);})*;
 
@@ -74,7 +75,9 @@ ponteiros_opcionais returns [String ponteiros]
 
 //outros_ident permite a separação dos identificadores por virgula
 
-outros_ident : ('.' identificador)?;
+outros_ident returns [String id]
+@init {$id = "";}
+    : ('.' ponteiros_opcionais IDENT dimensao {$id += "." + $IDENT.text;})*;
 
 //Define a dimensão sendo zero ou mais sequencidas de [expressão]
 
@@ -83,16 +86,13 @@ dimensao : ('[' exp_aritmetica ']')*;
 //Tipo é definido como um registro ("registro" v1, v2 ... "fim registro") ou
 // um ponteiro (^) seguido de um tipo básico
 
-tipo returns [String tipodado]
-    : registro {$tipodado = "registro";}| tipo_estendido {$tipodado = $tipo_estendido.tipodado;};
+tipo returns [String tipodado, List<Pair> atributos]
+    : registro {$tipodado = "registro"; $atributos = $registro.atributos;}| tipo_estendido {$tipodado = $tipo_estendido.tipodado;};
 
 //mais identificadores composto de ',' e outro identificador
 
 mais_ident : (',' identificador)* ;
 
-//definido como uma variável seguida de outra
-
-mais_variaveis : variavel*;
 
 //Define as palavres reservadas para um tipo basico
 
@@ -103,7 +103,10 @@ tipo_basico returns [String tipodado]
 //Define um tipo basico ou um identificador
 
 tipo_basico_ident returns [String tipodado]
-    : tipo_basico {$tipodado = $tipo_basico.tipodado;}| IDENT {$tipodado = $IDENT.text;};
+    : tipo_basico {$tipodado = $tipo_basico.tipodado;}
+    | IDENT {$tipodado = $IDENT.text;
+             if(!tipos.existeTipo($IDENT.text))
+                Mensagens.erroTipoNaoExiste($IDENT.text, $IDENT.line);};
 
 //tipo estendido é definido como um ponteiro seguido de um identificador de tipo básico
 
@@ -117,15 +120,40 @@ valor_constante : CADEIA | NUM_INT | NUM_REAL | 'verdadeiro' | 'falso' ;
 //registro é composto pela palavra reservada "registro" seguido de uma ou mais variáveis e
 //finalizado pela palavra reservada "fim_registro"
 
-registro : 'registro' variavel mais_variaveis 'fim_registro';
+registro returns [List<Pair> atributos]
+@init { $atributos = new ArrayList<Pair>();}
+    : 'registro' (variavel_registro {$atributos.addAll($variavel_registro.atributos);})+ 'fim_registro';
+
+
+variavel_registro returns [List<Pair> atributos]
+@init { $atributos = new ArrayList<Pair>();}
+    : IDENT dimensao mais_var_registro ':' tipo
+      {Pair pair = new Pair($IDENT.text, $tipo.tipodado);
+       $atributos.add(pair);
+       for (String atr : $mais_var_registro.atributos) {
+           Pair npair = new Pair(atr, $tipo.tipodado);
+           $atributos.add(npair);
+           }};
+
+mais_var_registro returns [List<String> atributos]
+@init { $atributos = new ArrayList<String>();}
+    : (',' IDENT dimensao {$atributos.add($IDENT.text);})*;
 
 //Uma declaração é composta por "procedimento nome_procedimento (parametros)" seguido de 
 //declarações e comandos terminado pela palavra reservada "fim_procedimento" ou
 //composta por "funcao nome_funcao (parametros) :" seguido de um tipo estendido, 
 //declarações e comandos, sendo terminado por "fim_funcao"
 
-declaracao_global : 'procedimento' IDENT '(' parametros_opcional ')' declaracoes_locais comandos 'fim_procedimento'
-                  | 'funcao' IDENT '(' parametros_opcional ')' ':' tipo_estendido declaracoes_locais comandos 'fim_funcao';
+declaracao_global : 'procedimento' IDENT 
+                    {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "void", "procedimento");
+                     pilhaDeTabelas.empilhar(new TabelaDeSimbolos("procedimento_"+$IDENT.text));}
+                    '(' parametros_opcional ')' declaracoes_locais comandos 'fim_procedimento'
+                    {pilhaDeTabelas.desempilhar();}
+                  | 'funcao' IDENT 
+                    {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_estendido.tipodado, "funcao");
+                     pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao_"+$IDENT.text));}
+                    '(' parametros_opcional ')' ':' tipo_estendido declaracoes_locais comandos 'fim_funcao'
+                    {pilhaDeTabelas.desempilhar();};
 
 //parametro opcional é formado por parametro
 
@@ -134,7 +162,13 @@ parametros_opcional : parametro | ;
 //parametro é formado por uma variavel opcional, um ou mais indentificadores seguido de ":"
 //e um tipo estendido seguido de mais parametros
 
-parametro : var_opcional identificador mais_ident ':' tipo_estendido mais_parametros;
+parametro : var_opcional ident_param mais_id_param ':' tipo_estendido 
+            {pilhaDeTabelas.topo().adicionarSimbolo($ident_param.param, $tipo_estendido.tipodado, "parametro");} mais_parametros;
+
+ident_param returns [String param]
+    : ponteiros_opcionais IDENT {$param = $IDENT.text;} dimensao outros_ident;
+
+mais_id_param : (',' ident_param)* ;
 
 //var opcional é definido como a palavra reservada "var"
 
@@ -167,8 +201,11 @@ cmd : 'leia' '(' identificador mais_ident ')'
     | 'enquanto' expressao 'faca' comandos 'fim_enquanto'
     | 'faca' comandos 'ate' expressao
     | '^' IDENT outros_ident dimensao '<-' expressao
-    | IDENT chamada_atribuicao
-    | 'retorne' expressao;
+    | IDENT chamada
+    | IDENT atribuicao {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
+                            Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);}
+    | r = 'retorne' expressao { if(!pilhaDeTabelas.topo().getType().equals("funcao"))
+                                    Mensagens.escopoNaoPermitido($r.line);};
 
 //Permite que exista mais de uma expressão, separando-as por vírgula
 
@@ -181,7 +218,10 @@ senao_opcional : 'senao' comandos | ;
 //chamada de atribuição é composta por argumentos opcionais entre parenteses ou
 //um ou mais identificador podendo ou não ser mais dimensões seguido de "<-" expressão
 
-chamada_atribuicao : '(' argumentos_opcional ')' | outros_ident dimensao '<-' expressao;
+chamada : '(' argumentos_opcional ')';
+
+atribuicao returns [String type, boolean compativel]
+    : outros_ident dimensao '<-' expressao;
 
 //argumento opcional é composto por uma ou mais expressões
 

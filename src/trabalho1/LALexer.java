@@ -56,12 +56,12 @@ public class LALexer extends Lexer {
 	};
 
 
-	static String grupo = "<489131, 489468, 408620>";
 	PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
+	Tipos tipos = new Tipos();
 
 	private void stop(String msg) {
 	      throw new ParseCancellationException(msg);
-	   }
+	}
 
 
 	public LALexer(CharStream input) {

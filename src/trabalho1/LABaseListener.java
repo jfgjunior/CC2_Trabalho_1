@@ -17,19 +17,6 @@ public class LABaseListener implements LAListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterChamada_atribuicao(@NotNull LAParser.Chamada_atribuicaoContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitChamada_atribuicao(@NotNull LAParser.Chamada_atribuicaoContext ctx) { }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterTermo(@NotNull LAParser.TermoContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -37,6 +24,19 @@ public class LABaseListener implements LAListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitTermo(@NotNull LAParser.TermoContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterVariavel_registro(@NotNull LAParser.Variavel_registroContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVariavel_registro(@NotNull LAParser.Variavel_registroContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -63,6 +63,19 @@ public class LABaseListener implements LAListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitIntervalo_opcional(@NotNull LAParser.Intervalo_opcionalContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMais_var_registro(@NotNull LAParser.Mais_var_registroContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMais_var_registro(@NotNull LAParser.Mais_var_registroContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -160,6 +173,19 @@ public class LABaseListener implements LAListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterIdent_param(@NotNull LAParser.Ident_paramContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitIdent_param(@NotNull LAParser.Ident_paramContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterOp_opcional(@NotNull LAParser.Op_opcionalContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -193,6 +219,19 @@ public class LABaseListener implements LAListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitOutros_fatores(@NotNull LAParser.Outros_fatoresContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterMais_id_param(@NotNull LAParser.Mais_id_paramContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitMais_id_param(@NotNull LAParser.Mais_id_paramContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -238,19 +277,6 @@ public class LABaseListener implements LAListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterDeclaracao_global(@NotNull LAParser.Declaracao_globalContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitDeclaracao_global(@NotNull LAParser.Declaracao_globalContext ctx) { }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterParcela_nao_unario(@NotNull LAParser.Parcela_nao_unarioContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -258,6 +284,19 @@ public class LABaseListener implements LAListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitParcela_nao_unario(@NotNull LAParser.Parcela_nao_unarioContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDeclaracao_global(@NotNull LAParser.Declaracao_globalContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDeclaracao_global(@NotNull LAParser.Declaracao_globalContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -342,6 +381,19 @@ public class LABaseListener implements LAListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterChamada(@NotNull LAParser.ChamadaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitChamada(@NotNull LAParser.ChamadaContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterOutros_fatores_logicos(@NotNull LAParser.Outros_fatores_logicosContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -362,19 +414,6 @@ public class LABaseListener implements LAListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitDeclaracoes_locais(@NotNull LAParser.Declaracoes_locaisContext ctx) { }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterMais_variaveis(@NotNull LAParser.Mais_variaveisContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitMais_variaveis(@NotNull LAParser.Mais_variaveisContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -420,19 +459,6 @@ public class LABaseListener implements LAListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOutros_termos(@NotNull LAParser.Outros_termosContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitOutros_termos(@NotNull LAParser.Outros_termosContext ctx) { }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterParcela_unario(@NotNull LAParser.Parcela_unarioContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -440,6 +466,19 @@ public class LABaseListener implements LAListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitParcela_unario(@NotNull LAParser.Parcela_unarioContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterOutros_termos(@NotNull LAParser.Outros_termosContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitOutros_termos(@NotNull LAParser.Outros_termosContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -524,6 +563,19 @@ public class LABaseListener implements LAListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterAtribuicao(@NotNull LAParser.AtribuicaoContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAtribuicao(@NotNull LAParser.AtribuicaoContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterDecl_local_global(@NotNull LAParser.Decl_local_globalContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -576,13 +628,13 @@ public class LABaseListener implements LAListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterMais_parametros(@NotNull LAParser.Mais_parametrosContext ctx) { }
+	@Override public void enterParcela(@NotNull LAParser.ParcelaContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitMais_parametros(@NotNull LAParser.Mais_parametrosContext ctx) { }
+	@Override public void exitParcela(@NotNull LAParser.ParcelaContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -602,13 +654,13 @@ public class LABaseListener implements LAListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterParcela(@NotNull LAParser.ParcelaContext ctx) { }
+	@Override public void enterMais_parametros(@NotNull LAParser.Mais_parametrosContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitParcela(@NotNull LAParser.ParcelaContext ctx) { }
+	@Override public void exitMais_parametros(@NotNull LAParser.Mais_parametrosContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

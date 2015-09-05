@@ -19,6 +19,14 @@ public class Mensagens {
         text.append("Linha "+line +": identificador "+var+" nao declarado").append('\n');
     }
     
+    public static void escopoNaoPermitido(int line) {
+        text.append("Linha "+ line +": comando retorne nao permitido nesse escopo").append("\n");
+    }
+    
+    public static void erroTipoNaoExiste(String tipo, int line) {
+        text.append("Linha "+ line +": tipo "+tipo+ " nao declarado").append("\n");
+    }
+    
     public static String getText() {
         return text.toString();
     }

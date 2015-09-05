@@ -39,6 +39,14 @@ public class TabelaDeSimbolos {
         return false;
     }
     
+    public String getType() {
+        if (escopo.contains("funcao"))
+            return "funcao";
+        else if (escopo.contains("procedimento"))
+            return "procedimento";
+        return "global";
+    }
+    
     @Override
     public String toString() {
         String ret = "Escopo: "+escopo;
