@@ -30,4 +30,18 @@ public class Mensagens {
     public static String getText() {
         return text.toString();
     }
+    
+     public static void erroVariavelNaoCompativel(String var, int line) {
+        text.append("Linha "+line +": atribuicao nao compativel para formato2 "+var).append('\n');
+    }
+     
+     public static void erroIncompatibilidadeParametros(String funcao, int line) {
+         text.append("Linha "+line+": incompatibilidade de parametros na chamada de "+funcao);
+    }
+     
+     public static void erroRetorne(int line) {
+         text.append("Linhas "+line+": comando retorne nao permitido nesse escopo");
+     }
+     
+     
 }
