@@ -36,6 +36,6 @@ public class Mensagens {
     }
      
      public static void erroIncompatibilidadeParametros(String funcao, int line) {
-         text.append("Linha "+line+": incompatibilidade de parametros na chamada de "+funcao);
+         text.append("Linha "+line+": incompatibilidade de parametros na chamada de "+funcao).append('\n');
     }   
 }
