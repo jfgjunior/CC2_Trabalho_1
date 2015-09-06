@@ -39,13 +39,13 @@ public class TabelaDeSimbolos {
         return false;
     }
     
-    public String getTypeData(String nome) {
+    public String getVarTipo(String nome) {
         for(EntradaTabelaDeSimbolos etds:simbolos) {
             if(etds.getNome().equals(nome)) {
                 return etds.getTipodado();
             }
         }
-        return "";
+        return "false";
     }
     
     public String getType() {

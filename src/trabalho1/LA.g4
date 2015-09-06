@@ -34,7 +34,8 @@ declaracao_local : 'declare' variavel
                  | 'constante' IDENT ':' tipo_basico '=' valor_constante
                    {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_basico.tipodado, "constante");}
                  | 'tipo' IDENT ':' tipo
-                   {tipos.addTipo($IDENT.text, $tipo.atributos);};
+                   {tipos.addTipo($IDENT.text, $tipo.atributos);
+                    pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "indefinido", "tipo");};
 
 //uma variável é do tipo "nome[expressão]" ou "nome" seguido de dois pontos e o tipo
 
@@ -65,7 +66,15 @@ mais_var returns [List<Pair> nomes]
 
 identificador : ponteiros_opcionais IDENT dimensao outros_ident 
                 {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
-                     Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);};
+                     Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);
+                     else if (!$outros_ident.id.equals("")) {
+                        String var = $IDENT.text + $outros_ident.id;
+                        String tipo = pilhaDeTabelas.getVarTipo($IDENT.text);
+                        String atr = $outros_ident.id.substring(1);
+                        if(!tipos.existeAtributo(tipo, atr))
+                            Mensagens.erroVariavelNaoExiste(var, $IDENT.line);
+                    }
+                    };
 
 //ponteiros_opcionais são compostos por zero ou mais ^
 
@@ -300,10 +309,12 @@ parcela : op_unario parcela_unario | parcela_nao_unario;
 //uma expressão entre parenteses
 
 parcela_unario : '^' IDENT outros_ident dimensao 
-                 | IDENT chamada_partes {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
-                                             Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);}
+                 | IDENT chamada_partes 
+                   {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
+                        Mensagens.erroVariavelNaoExiste($IDENT.text+$chamada_partes.id, $IDENT.line);
+                   }
                  | NUM_INT 
-                 | NUM_REAL 
+                 | NUM_REAL
                  | '(' expressao ')';
 
 //Parcela não unario é composta pela operação AND seguida de um ou mais identificadores separados
@@ -319,7 +330,9 @@ outras_parcelas : ('%' parcela)*;
 //chamada partes é definida por uma ou mais expressões separadas por vírgula entre parentes ou
 // por identificadores, também separados por virgulas podendo ou não ter alguma dimensão
 
-chamada_partes : '(' expressao mais_expressao ')' | outros_ident dimensao | ;
+chamada_partes returns [String id]
+@init {$id = "";}
+    : '(' expressao mais_expressao ')' | outros_ident dimensao {$id = $outros_ident.id;}| ;
 
 //Define a expressão relacinal como uma expressão aritimética seguida de um operadr opcional ou não
 
