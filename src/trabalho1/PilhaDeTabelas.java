@@ -36,6 +36,15 @@ public class PilhaDeTabelas {
         return false;
     }
     
+    public String getTypeData(String nome) {
+        for(TabelaDeSimbolos ts : pilha) {
+            if(ts.existeSimbolo(nome)) {
+                return ts.getTypeData(nome);
+            }
+        }   
+        return "";
+    }
+    
     public String getVarTipo(String nome) {
         for (TabelaDeSimbolos ts : pilha) {
             if (ts.existeSimbolo(nome)) {

@@ -27,11 +27,19 @@ public class Mensagens {
         text.append("Linha "+ line +": tipo "+tipo+ " nao declarado").append("\n");
     }
     
-    public static void writeMessage(String msg) {
-        text.append(msg).append("\n");
-    }
-    
     public static String getText() {
         return text.toString();
+    }
+    
+     public static void erroVariavelNaoCompativel(String var, int line) {
+        text.append("Linha "+line +": atribuicao nao compativel para "+var).append('\n');
+    }
+     
+     public static void erroIncompatibilidadeParametros(String funcao, int line) {
+         text.append("Linha "+line+": incompatibilidade de parametros na chamada de "+funcao).append('\n');
+    }
+     
+     public static void teste(String b, String a, String c) {
+        text.append("IDENT "+b+" tipo IDENT "+a+" tipo atributo "+c).append('\n');
     }
 }

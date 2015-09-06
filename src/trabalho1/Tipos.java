@@ -32,7 +32,7 @@ public class Tipos {
         tipos.put(tipo, atributos);
     }
     
-    public boolean existeAtributo(String tipo, String atributo) {
+     public boolean existeAtributo(String tipo, String atributo) {
         for (Map.Entry<String, List<Pair>> entry : tipos.entrySet()) {
             String key = entry.getKey();
             if (key.equals(tipo)) {
