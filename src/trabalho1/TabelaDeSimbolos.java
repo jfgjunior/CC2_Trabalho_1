@@ -48,6 +48,15 @@ public class TabelaDeSimbolos {
         return "";
     }
     
+    public String getVarTipo(String nome) {
+        for(EntradaTabelaDeSimbolos etds:simbolos) {
+            if(etds.getNome().equals(nome)) {
+                return etds.getTipodado();
+            }
+        }
+        return "false";
+    }
+    
     public String getType() {
         if (escopo.contains("funcao"))
             return "funcao";
