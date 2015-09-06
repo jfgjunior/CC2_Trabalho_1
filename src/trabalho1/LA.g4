@@ -86,7 +86,8 @@ ponteiros_opcionais returns [String ponteiros]
 
 outros_ident returns [String id, String type]
 @init {$id = "";}
-    : ('.' ponteiros_opcionais IDENT dimensao {$id += "." + $IDENT.text; pilhaDeTabelas.getTypeData($type = $IDENT.text);})*;
+    : ('.' ponteiros_opcionais IDENT dimensao {$id += "." + $IDENT.text; 
+                                               pilhaDeTabelas.getTypeData($type = $IDENT.text);})*;
 
 //Define a dimensão sendo zero ou mais sequencidas de [expressão]
 
@@ -159,9 +160,9 @@ declaracao_global : 'procedimento' IDENT
                     '(' parametros_opcional ')' declaracoes_locais comandos 'fim_procedimento'
                     {pilhaDeTabelas.desempilhar();}
                   | 'funcao' IDENT 
-                    {pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao_"+$IDENT.text));}
-                    '(' parametros_opcional ')' ':' tipo_estendido {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_estendido.tipodado, "funcao");}
-                    declaracoes_locais comandos 'fim_funcao'
+                    {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "", "funcao");
+                     pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao_"+$IDENT.text));}
+                    '(' parametros_opcional ')' ':' tipo_estendido declaracoes_locais comandos 'fim_funcao'
                     {pilhaDeTabelas.desempilhar();};
 
 //parametro opcional é formado por parametro
@@ -274,6 +275,7 @@ op_unario : '-' | ;
 //Expressẽos aritiméticas são compostas por um ou mais termos separados por virgulas
 
 exp_aritmetica returns [boolean compativel, String type]
+@init {$compativel = false; $type = ""; }
     : termo outros_termos {if(!$outros_termos.type.equals("") && !$termo.type.equals($outros_termos.type)){
                                 $compativel = false;
                                 $type = $outros_termos.type;
@@ -324,9 +326,10 @@ parcela returns [String type]
 //uma expressão entre parenteses
 
 parcela_unario returns [String type]
+@init {$type = "";}
     : '^' IDENT outros_ident dimensao {$type = pilhaDeTabelas.getTypeData($IDENT.text);} 
     | IDENT chamada_partes {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
-                                Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);
+                                Mensagens.erroVariavelNaoExiste($IDENT.text+$chamada_partes.id, $IDENT.line);
                             $type = pilhaDeTabelas.getTypeData($IDENT.text);}
     | NUM_INT {$type = "inteiro";}
     | NUM_REAL {$type = "real";}
