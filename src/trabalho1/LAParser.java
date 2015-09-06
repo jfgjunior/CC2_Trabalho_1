@@ -380,7 +380,10 @@ public class LAParser extends Parser {
 			setState(165); ((VariavelContext)_localctx).mais_var = mais_var();
 			setState(166); match(38);
 			setState(167); ((VariavelContext)_localctx).tipo = tipo();
-			  List<Pair> nomes = new ArrayList<Pair>();
+			  if (!((VariavelContext)_localctx).tipo.atributos.isEmpty())
+			                tipos.addTipo(((VariavelContext)_localctx).tipo.tipodado, ((VariavelContext)_localctx).tipo.atributos);
+			          
+			            List<Pair> nomes = new ArrayList<Pair>();
 			            nomes = ((VariavelContext)_localctx).mais_var.nomes;
 			            Pair pair = new Pair((((VariavelContext)_localctx).IDENT!=null?((VariavelContext)_localctx).IDENT.getText():null), (((VariavelContext)_localctx).IDENT!=null?((VariavelContext)_localctx).IDENT.getLine():0));
 			            nomes.add(0, pair);
@@ -739,6 +742,7 @@ public class LAParser extends Parser {
 	public final TipoContext tipo() throws RecognitionException {
 		TipoContext _localctx = new TipoContext(_ctx, getState());
 		enterRule(_localctx, 20, RULE_tipo);
+		 ((TipoContext)_localctx).atributos =  new ArrayList<Pair>();
 		try {
 			setState(219);
 			switch (_input.LA(1)) {

@@ -40,7 +40,10 @@ declaracao_local : 'declare' variavel
 //uma variável é do tipo "nome[expressão]" ou "nome" seguido de dois pontos e o tipo
 
 variavel : IDENT dimensao mais_var ':' tipo
-         {  List<Pair> nomes = new ArrayList<Pair>();
+         {  if (!$tipo.atributos.isEmpty())
+                tipos.addTipo($tipo.tipodado, $tipo.atributos);
+          
+            List<Pair> nomes = new ArrayList<Pair>();
             nomes = $mais_var.nomes;
             Pair pair = new Pair($IDENT.text, $IDENT.line);
             nomes.add(0, pair);
@@ -97,6 +100,7 @@ dimensao : ('[' exp_aritmetica ']')*;
 // um ponteiro (^) seguido de um tipo básico
 
 tipo returns [String tipodado, List<Pair> atributos]
+@init { $atributos = new ArrayList<Pair>();}
     : registro {$tipodado = "registro"; $atributos = $registro.atributos;}| tipo_estendido {$tipodado = $tipo_estendido.tipodado;};
 
 //mais identificadores composto de ',' e outro identificador
