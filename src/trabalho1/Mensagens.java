@@ -37,5 +37,9 @@ public class Mensagens {
      
      public static void erroIncompatibilidadeParametros(String funcao, int line) {
          text.append("Linha "+line+": incompatibilidade de parametros na chamada de "+funcao).append('\n');
-    }   
+    }
+     
+     public static void teste(String b, String a, String c) {
+        text.append("IDENT "+b+" tipo IDENT "+a+" tipo atributo "+c).append('\n');
+    }
 }

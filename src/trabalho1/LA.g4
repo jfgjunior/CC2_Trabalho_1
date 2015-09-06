@@ -150,9 +150,9 @@ declaracao_global : 'procedimento' IDENT
                     '(' parametros_opcional ')' declaracoes_locais comandos 'fim_procedimento'
                     {pilhaDeTabelas.desempilhar();}
                   | 'funcao' IDENT 
-                    {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_estendido.tipodado, "funcao");
-                     pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao_"+$IDENT.text));}
-                    '(' parametros_opcional ')' ':' tipo_estendido declaracoes_locais comandos 'fim_funcao'
+                    {pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao_"+$IDENT.text));}
+                    '(' parametros_opcional ')' ':' tipo_estendido {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_estendido.tipodado, "funcao");}
+                    declaracoes_locais comandos 'fim_funcao'
                     {pilhaDeTabelas.desempilhar();};
 
 //parametro opcional é formado por parametro
@@ -204,11 +204,10 @@ cmd : 'leia' '(' identificador mais_ident ')'
     | IDENT chamada
     | IDENT atribuicao {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
                             Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);
-                        if(!$atribuicao.compativel)
+                        if(!$atribuicao.compativel){
                             Mensagens.erroVariavelNaoCompativel($IDENT.text, $IDENT.line);
-                        else
-                            if(!pilhaDeTabelas.getTypeData($IDENT.text).equals($atribuicao.type))
-                                Mensagens.erroVariavelNaoCompativel($IDENT.text, $IDENT.line);}
+                            }
+                        }
       
     | r = 'retorne' expressao { if(!pilhaDeTabelas.topo().getType().equals("funcao"))
                                     Mensagens.escopoNaoPermitido($r.line);};
@@ -266,11 +265,12 @@ op_unario : '-' | ;
 //Expressẽos aritiméticas são compostas por um ou mais termos separados por virgulas
 
 exp_aritmetica returns [boolean compativel, String type]
-    : termo outros_termos {if(!$termo.type.equals($outros_termos.type) && !$termo.type.equals("") && !$outros_termos.type.equals(""))
-                                $compativel = false; $type = $outros_termos.type;
-                           if($outros_termos.type.equals(""))
-                                $compativel = true; $type = $termo.type;};
-
+    : termo outros_termos {if(!$outros_termos.type.equals("") && !$termo.type.equals($outros_termos.type)){
+                                $compativel = false;
+                                $type = $outros_termos.type;
+                           }else{
+                                $compativel = true; 
+                                $type = $termo.type;};};
 //Define as operaçẽs de multiplicação com sendo multiplicação e divisão
 
 op_multiplicacao : '*' | '/';
@@ -287,6 +287,7 @@ termo returns [String type] : fator outros_fatores {$type = $fator.type;};
 //separados por virgula
 
 outros_termos returns [String type]
+@init {$type = "";}
     : (op_adicao termo {$type = $termo.type;})*;
 
 //fator é uma ou mais parecelas separadas por virgula
@@ -342,7 +343,7 @@ chamada_partes : '(' expressao mais_expressao ')' | outros_ident dimensao | ;
 //Define a expressão relacinal como uma expressão aritimética seguida de um operadr opcional ou não
 
 exp_relacional returns [boolean compativel, String type]
-    : exp_aritmetica op_opcional {$compativel = $exp_aritmetica.compativel;};
+    : exp_aritmetica op_opcional {$compativel = $exp_aritmetica.compativel; $type = $exp_aritmetica.type;};
 
 //Diz que uma op_opcional é uma operação relacional seguida de uma expressão aritimética
 
