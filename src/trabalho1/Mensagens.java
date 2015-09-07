@@ -31,19 +31,15 @@ public class Mensagens {
         return text.toString();
     }
     
-    public static void erroVariavelNaoCompativel(String var, int line) {
+     public static void erroVariavelNaoCompativel(String var, int line) {
         text.append("Linha "+line +": atribuicao nao compativel para "+var).append('\n');
     }
      
-    public static void erroIncompatibilidadeParametros(String funcao, int line) {
+     public static void erroIncompatibilidadeParametros(String funcao, int line) {
          text.append("Linha "+line+": incompatibilidade de parametros na chamada de "+funcao).append('\n');
     }
      
-    public static void teste(String s) {
-        text.append(s).append('\n');
-    }
-    
-    public static void teste1(int line) {
-        text.append(line).append('\n');
+     public static void teste(String a) {
+        text.append("---------------\n"+a).append('\n');
     }
 }

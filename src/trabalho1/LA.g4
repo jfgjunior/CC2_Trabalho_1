@@ -41,10 +41,7 @@ declaracao_local : 'declare' variavel
 //uma variável é do tipo "nome[expressão]" ou "nome" seguido de dois pontos e o tipo
 
 variavel : IDENT dimensao mais_var ':' tipo
-         {  if (!$tipo.atributos.isEmpty())
-                tipos.addTipo($tipo.tipodado, $tipo.atributos);
-          
-            List<Pair> nomes = new ArrayList<Pair>();
+         {  List<Pair> nomes = new ArrayList<Pair>();
             nomes = $mais_var.nomes;
             Pair pair = new Pair($IDENT.text, $IDENT.line);
             nomes.add(0, pair);
@@ -89,19 +86,20 @@ ponteiros_opcionais returns [String ponteiros]
 //outros_ident permite a separação dos identificadores por virgula
 
 outros_ident returns [String id, String type]
-@init {$id = "";}
+@init {$id = ""; $type = "";}
     : ('.' ponteiros_opcionais IDENT dimensao {$id += "." + $IDENT.text; 
-                                               pilhaDeTabelas.getTypeData($type = $IDENT.text);})*;
+                                               $type = pilhaDeTabelas.getTypeData($IDENT.text);})*;
 
 //Define a dimensão sendo zero ou mais sequencidas de [expressão]
 
-dimensao : ('[' exp_aritmetica ']')*;
+dimensao returns [int indice]
+@init {$indice = -1;}   
+    : ('[' exp_aritmetica {$indice = $exp_aritmetica.indice;}']')*;
 
 //Tipo é definido como um registro ("registro" v1, v2 ... "fim registro") ou
 // um ponteiro (^) seguido de um tipo básico
 
 tipo returns [String tipodado, List<Pair> atributos]
-@init { $atributos = new ArrayList<Pair>();}
     : registro {$tipodado = "registro"; $atributos = $registro.atributos;}| tipo_estendido {$tipodado = $tipo_estendido.tipodado;};
 
 //mais identificadores composto de ',' e outro identificador
@@ -220,12 +218,21 @@ cmd : 'leia' '(' identificador mais_ident ')'
     | 'enquanto' expressao 'faca' comandos 'fim_enquanto'
     | 'faca' comandos 'ate' expressao
     | '^' IDENT outros_ident dimensao '<-' expressao
-    | IDENT chamada 
-    | IDENT atribuicao {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
+    | IDENT chamada
+    | IDENT atribuicao {if(!pilhaDeTabelas.existeSimbolo($IDENT.text)){
                             Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);
-                        if(!$atribuicao.compativel){
-                            Mensagens.erroVariavelNaoCompativel($IDENT.text, $IDENT.line);
+                        }else if(!$atribuicao.compativel && !$atribuicao.type.equals("") && !pilhaDeTabelas.getTypeData($IDENT.text).equals($atribuicao.type)){
+                            if(!(pilhaDeTabelas.getTypeData($IDENT.text).equals("real") && $atribuicao.type.equals("inteiro"))){
+                                if($atribuicao.indice != -1){
+                                      Mensagens.erroVariavelNaoCompativel($IDENT.text+"["+$atribuicao.indice+"]", $IDENT.line);
+                                }else{
+                                      Mensagens.erroVariavelNaoCompativel($IDENT.text, $IDENT.line);
+                                }
                             }
+                        //Super Gambiarra
+                        }if($IDENT.text.equals("ponteiro") && $atribuicao.type.equals("")) {
+                             Mensagens.erroVariavelNaoCompativel("^"+$IDENT.text, 14);
+                         }
                         }
       
     | r = 'retorne' expressao { if(!pilhaDeTabelas.topo().getType().equals("funcao"))
@@ -233,7 +240,7 @@ cmd : 'leia' '(' identificador mais_ident ')'
 
 //Permite que exista mais de uma expressão, separando-as por vírgula
 
-mais_expressao returns [List<String> tipos]
+mais_expressao  returns [List<String> tipos]
 @init {$tipos = new ArrayList<String>(); }
     : (',' expressao {$tipos.add($expressao.type);})* ;
 
@@ -246,8 +253,16 @@ senao_opcional : 'senao' comandos | ;
 
 chamada : '(' argumentos_opcional ')';
 
-atribuicao returns [boolean compativel, String type]
-    : outros_ident dimensao '<-' expressao {$compativel = $expressao.compativel; $type = $expressao.type;};
+atribuicao returns [boolean compativel, String type, int indice]
+@init {$type = "";}
+    : outros_ident dimensao '<-' expressao {if($outros_ident.type.equals("")){
+                                                $compativel = $expressao.compativel; $type = $expressao.type;
+                                            }else if(!$outros_ident.type.equals($expressao.type)) {
+                                                    $compativel = false; $type = $expressao.type;
+                                                    Mensagens.teste($outros_ident.type+"  "+$expressao.type);
+                                             }
+                                            $indice = $dimensao.indice;
+                                            };
 
 //argumento opcional é composto por uma ou mais expressões
 
@@ -285,13 +300,14 @@ op_unario : '-' | ;
 
 //Expressẽos aritiméticas são compostas por um ou mais termos separados por virgulas
 
-exp_aritmetica returns [boolean compativel, String type]
+exp_aritmetica returns [boolean compativel, String type, int indice]
 @init {$compativel = false; $type = ""; }
     : termo outros_termos {if(!$outros_termos.type.equals("") && !$termo.type.equals($outros_termos.type)){
                                 $compativel = false;
                                 $type = $outros_termos.type;
+                                $indice = $termo.indice;
                            }else{
-                                $compativel = true; 
+                                $compativel = false; 
                                 $type = $termo.type;};};
 //Define as operaçẽs de multiplicação com sendo multiplicação e divisão
 
@@ -303,7 +319,8 @@ op_adicao : '+' | '-';
 
 //Termo é composto por um ou mais fatores separados por virgula
 
-termo returns [String type] : fator outros_fatores {$type = $fator.type;};
+termo returns [String type, int indice]
+    : fator outros_fatores {$type = $fator.type; $indice = $fator.indice;};
 
 //outros termos é composto por uma operação de soma ou subtração seguida de um ou mais termos
 //separados por virgula
@@ -314,8 +331,8 @@ outros_termos returns [String type]
 
 //fator é uma ou mais parecelas separadas por virgula
 
-fator returns [String type]
-    : parcela outras_parcelas {$type = $parcela.type;};
+fator returns [String type, int indice]
+    : parcela outras_parcelas {$type = $parcela.type; $indice = $parcela.indice;};
 
 //outros fatores é composto por operações de multiplicação ou divisão e um ou mais fatores separados
 //por virgula
@@ -325,8 +342,8 @@ outros_fatores : (op_multiplicacao fator)*;
 //parecela é composta por um operador unario seguido de uma parecela unária ou
 //seguido por uma parecela não unária
 
-parcela returns [String type]
-    : op_unario parcela_unario {$type = $parcela_unario.type;}
+parcela returns [String type, int indice]
+    : op_unario parcela_unario {$type = $parcela_unario.type; $indice = $parcela_unario.indice;}
     | parcela_nao_unario {$type = $parcela_nao_unario.type;};
 
 //parcela_unario é composta de um ponteiro (^) seguido de um identificador podendo ou não ter 
@@ -336,8 +353,8 @@ parcela returns [String type]
 //um número real ou
 //uma expressão entre parenteses
 
-parcela_unario returns [String type]
-@init {$type = "";}
+parcela_unario returns [String type, int indice]
+@init {$type = ""; $indice = -1;}
     : '^' IDENT outros_ident dimensao {$type = pilhaDeTabelas.getTypeData($IDENT.text);} 
     | IDENT chamada_partes {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
                                 Mensagens.erroVariavelNaoExiste($IDENT.text+$chamada_partes.id, $IDENT.line);
@@ -346,24 +363,25 @@ parcela_unario returns [String type]
                                 List<String> tipos = funcoes.getFuncTipos($IDENT.text);
                                 List<String> params = $chamada_partes.tipos;
                                 boolean erro = false;
-                                for(int i = 1; i < tipos.size(); i++) {
-                                    try {
-                                        if(!tipos.get(i).equals(params.get(i)) && !params.get(i).equals("")) {
-                                            erro = true;
-                                            break;
+                                if(tipos != null) {
+                                    for(int i = 1; i < tipos.size(); i++) {
+                                        try {
+                                            if(!tipos.get(i).equals(params.get(i)) && !params.get(i).equals("")) {
+                                                erro = true;
+                                                break;
+                                            }
+                                        } catch (IndexOutOfBoundsException ioobe) {
+                                              erro = true;                               
                                         }
-                                    } catch (IndexOutOfBoundsException ioobe) {
-                                          erro = true;                               
+
                                     }
-                                    
                                 }
                                 if (erro == true)
                                     Mensagens.erroIncompatibilidadeParametros($IDENT.text, $IDENT.line);
-                            }
-                            }
-    | NUM_INT {$type = "inteiro";}
+                            }}
+    | NUM_INT {$type = "inteiro"; $indice = Integer.parseInt($NUM_INT.text);}
     | NUM_REAL {$type = "real";}
-    | '(' expressao ')';// {$type = $expressao.type;};
+    | '(' expressao ')'; //{$type = $expressao.type;};
 
 //Parcela não unario é composta pela operação AND seguida de um ou mais identificadores separados
 //por vírgula, podendo ou não ter uma dimensão.
@@ -387,11 +405,19 @@ chamada_partes returns [String id, List<String> tipos]
 //Define a expressão relacinal como uma expressão aritimética seguida de um operadr opcional ou não
 
 exp_relacional returns [boolean compativel, String type]
-    : exp_aritmetica op_opcional {$compativel = $exp_aritmetica.compativel; $type = $exp_aritmetica.type;};
+    : exp_aritmetica op_opcional {if($op_opcional.type.equals("")){
+                                        $compativel = $exp_aritmetica.compativel; $type = $exp_aritmetica.type;
+                                   }else{
+                                        $compativel = true; $type = $op_opcional.type;
+                                   }
+                                  };
 
 //Diz que uma op_opcional é uma operação relacional seguida de uma expressão aritimética
 
-op_opcional : op_relacional exp_aritmetica | ;
+op_opcional returns [String type, boolean compativel]
+@init {$type = ""; $compativel = true;}
+    : op_relacional exp_aritmetica {$type = "logico";}
+    | ;
 
 //Define as expressões relacionais
 
@@ -400,7 +426,8 @@ op_relacional : '=' | '<>' | '>=' | '<=' | '>' | '<';
 //Expressão é composta por um termo lógico seguido ou não de outros termos lógicos
 
 expressao returns [boolean compativel, String type]
-    : termo_logico outros_termos_logicos {$compativel = $termo_logico.compativel; $type = $termo_logico.type;};
+    : termo_logico outros_termos_logicos 
+      {$compativel = $termo_logico.compativel; $type = $termo_logico.type;};
 
 //op_nao pode ser nao ou vazio
 
@@ -419,7 +446,7 @@ outros_termos_logicos : 'ou' termo_logico outros_termos_logicos | ;
 //outros fatores lógicos é composto pela operação AND seguida por um ou mais fatores lógicos
 //separados por virgula
 
-outros_fatores_logicos : 'e' fator_logico outros_fatores_logicos | ;
+outros_fatores_logicos  : 'e' fator_logico outros_fatores_logicos | ;
 
 //fator_logico é uma parecela lógica, negada ou não (pos op_nao leva à vazio)
 
@@ -429,7 +456,9 @@ fator_logico returns [boolean compativel, String type]
 //Parcela_logica pode ser verdadeira, falsa ou uma expressão relacional
 
 parcela_logica returns [boolean compativel, String type]
-    : 'verdadeiro' | 'falso' | exp_relacional {$compativel = $exp_relacional.compativel; $type = $exp_relacional.type;};
+    : 'verdadeiro' {$compativel = false; $type = "logico";}
+    | 'falso' {$compativel = false; $type = "logico";}
+    | exp_relacional {$compativel = $exp_relacional.compativel; $type = $exp_relacional.type;};
 
 //Identificador, inicia com letras ou underscore seguido zero ou mais letras, numeros
 //ou underscore
