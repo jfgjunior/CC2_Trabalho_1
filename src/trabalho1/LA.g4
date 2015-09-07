@@ -4,6 +4,7 @@ grammar LA;
 @members{
 PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
 Tipos tipos = new Tipos();
+Funcoes funcoes = new Funcoes();
 
 private void stop(String msg) {
       throw new ParseCancellationException(msg);
@@ -160,12 +161,14 @@ mais_var_registro returns [List<String> atributos]
 
 declaracao_global : 'procedimento' IDENT 
                     {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "void", "procedimento");
-                     pilhaDeTabelas.empilhar(new TabelaDeSimbolos("procedimento_"+$IDENT.text));}
+                     pilhaDeTabelas.empilhar(new TabelaDeSimbolos("procedimento_"+$IDENT.text));
+                     funcoes.addFuncao($IDENT.text);}
                     '(' parametros_opcional ')' declaracoes_locais comandos 'fim_procedimento'
                     {pilhaDeTabelas.desempilhar();}
                   | 'funcao' IDENT 
                     {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "", "funcao");
-                     pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao_"+$IDENT.text));}
+                     pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao_"+$IDENT.text));
+                     funcoes.addFuncao($IDENT.text);}
                     '(' parametros_opcional ')' ':' tipo_estendido declaracoes_locais comandos 'fim_funcao'
                     {pilhaDeTabelas.desempilhar();};
 
@@ -177,7 +180,9 @@ parametros_opcional : parametro | ;
 //e um tipo estendido seguido de mais parametros
 
 parametro : var_opcional ident_param mais_id_param ':' tipo_estendido 
-            {pilhaDeTabelas.topo().adicionarSimbolo($ident_param.param, $tipo_estendido.tipodado, "parametro");} mais_parametros;
+            {pilhaDeTabelas.topo().adicionarSimbolo($ident_param.param, $tipo_estendido.tipodado, "parametro");
+             funcoes.topo().add($tipo_estendido.tipodado);} 
+            mais_parametros;
 
 ident_param returns [String param]
     : ponteiros_opcionais IDENT {$param = $IDENT.text;} dimensao outros_ident;
@@ -215,7 +220,7 @@ cmd : 'leia' '(' identificador mais_ident ')'
     | 'enquanto' expressao 'faca' comandos 'fim_enquanto'
     | 'faca' comandos 'ate' expressao
     | '^' IDENT outros_ident dimensao '<-' expressao
-    | IDENT chamada
+    | IDENT chamada 
     | IDENT atribuicao {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
                             Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);
                         if(!$atribuicao.compativel){
@@ -228,7 +233,9 @@ cmd : 'leia' '(' identificador mais_ident ')'
 
 //Permite que exista mais de uma expressão, separando-as por vírgula
 
-mais_expressao : (',' expressao)* ;
+mais_expressao returns [List<String> tipos]
+@init {$tipos = new ArrayList<String>(); }
+    : (',' expressao {$tipos.add($expressao.type);})* ;
 
 //Define o comando senao que deve ser acompanhado ou não por outros comandos
 
@@ -334,7 +341,26 @@ parcela_unario returns [String type]
     : '^' IDENT outros_ident dimensao {$type = pilhaDeTabelas.getTypeData($IDENT.text);} 
     | IDENT chamada_partes {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
                                 Mensagens.erroVariavelNaoExiste($IDENT.text+$chamada_partes.id, $IDENT.line);
-                            $type = pilhaDeTabelas.getTypeData($IDENT.text);}
+                            $type = pilhaDeTabelas.getTypeData($IDENT.text);
+                            if(!$chamada_partes.tipos.isEmpty()) {
+                                List<String> tipos = funcoes.getFuncTipos($IDENT.text);
+                                List<String> params = $chamada_partes.tipos;
+                                boolean erro = false;
+                                for(int i = 1; i < tipos.size(); i++) {
+                                    try {
+                                        if(!tipos.get(i).equals(params.get(i)) && !params.get(i).equals("")) {
+                                            erro = true;
+                                            break;
+                                        }
+                                    } catch (IndexOutOfBoundsException ioobe) {
+                                          erro = true;                               
+                                    }
+                                    
+                                }
+                                if (erro == true)
+                                    Mensagens.erroIncompatibilidadeParametros($IDENT.text, $IDENT.line);
+                            }
+                            }
     | NUM_INT {$type = "inteiro";}
     | NUM_REAL {$type = "real";}
     | '(' expressao ')';// {$type = $expressao.type;};
@@ -354,9 +380,9 @@ outras_parcelas : ('%' parcela)*;
 //chamada partes é definida por uma ou mais expressões separadas por vírgula entre parentes ou
 // por identificadores, também separados por virgulas podendo ou não ter alguma dimensão
 
-chamada_partes returns [String id]
-@init {$id = "";}
-    : '(' expressao mais_expressao ')' | outros_ident dimensao {$id = $outros_ident.id;}| ;
+chamada_partes returns [String id, List<String> tipos]
+@init {$id = ""; $tipos = new ArrayList<String>();}
+    : '(' expressao mais_expressao {$tipos = $mais_expressao.tipos; $tipos.add(0, $expressao.type);}')' | outros_ident dimensao {$id = $outros_ident.id;}| ;
 
 //Define a expressão relacinal como uma expressão aritimética seguida de um operadr opcional ou não
 

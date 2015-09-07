@@ -58,6 +58,7 @@ public class LALexer extends Lexer {
 
 	PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
 	Tipos tipos = new Tipos();
+	Funcoes funcoes = new Funcoes();
 
 	private void stop(String msg) {
 	      throw new ParseCancellationException(msg);
