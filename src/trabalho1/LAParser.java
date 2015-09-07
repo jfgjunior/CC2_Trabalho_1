@@ -1985,7 +1985,10 @@ public class LAParser extends Parser {
 				                                      Mensagens.erroVariavelNaoCompativel((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null), (((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getLine():0));
 				                                }
 				                            }
-				                            }
+				                        //Super Gambiarra
+				                        }if((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null).equals("ponteiro") && ((CmdContext)_localctx).atribuicao.type.equals("")) {
+				                             Mensagens.erroVariavelNaoCompativel("^"+(((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null), 14);
+				                         }
 				                        
 				}
 				break;
@@ -2202,11 +2205,12 @@ public class LAParser extends Parser {
 			setState(439); ((AtribuicaoContext)_localctx).expressao = expressao();
 			if(((AtribuicaoContext)_localctx).outros_ident.type.equals("")){
 			                                                ((AtribuicaoContext)_localctx).compativel =  ((AtribuicaoContext)_localctx).expressao.compativel; ((AtribuicaoContext)_localctx).type =  ((AtribuicaoContext)_localctx).expressao.type;
-			                                            }else{
-			                                                if(!((AtribuicaoContext)_localctx).outros_ident.type.equals(((AtribuicaoContext)_localctx).expressao.type))
-			                                                    ((AtribuicaoContext)_localctx).compativel =  false; ((AtribuicaoContext)_localctx).type =  ((AtribuicaoContext)_localctx).outros_ident.type;
+			                                            }else if(!((AtribuicaoContext)_localctx).outros_ident.type.equals(((AtribuicaoContext)_localctx).expressao.type)) {
+			                                                    ((AtribuicaoContext)_localctx).compativel =  false; ((AtribuicaoContext)_localctx).type =  ((AtribuicaoContext)_localctx).expressao.type;
+			                                                    Mensagens.teste(((AtribuicaoContext)_localctx).outros_ident.type+"  "+((AtribuicaoContext)_localctx).expressao.type);
 			                                             }
 			                                            ((AtribuicaoContext)_localctx).indice =  ((AtribuicaoContext)_localctx).dimensao.indice;
+			                                            
 			}
 		}
 		catch (RecognitionException re) {
@@ -3055,7 +3059,6 @@ public class LAParser extends Parser {
 	public static class Parcela_unarioContext extends ParserRuleContext {
 		public String type;
 		public int indice;
-		public Outros_identContext outros_ident;
 		public Token IDENT;
 		public Chamada_partesContext chamada_partes;
 		public Token NUM_INT;
@@ -3099,10 +3102,10 @@ public class LAParser extends Parser {
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(522); match(47);
-				setState(523); match(IDENT);
-				setState(524); ((Parcela_unarioContext)_localctx).outros_ident = outros_ident();
+				setState(523); ((Parcela_unarioContext)_localctx).IDENT = match(IDENT);
+				setState(524); outros_ident();
 				setState(525); dimensao();
-				((Parcela_unarioContext)_localctx).type =  ((Parcela_unarioContext)_localctx).outros_ident.type;
+				((Parcela_unarioContext)_localctx).type =  pilhaDeTabelas.getTypeData((((Parcela_unarioContext)_localctx).IDENT!=null?((Parcela_unarioContext)_localctx).IDENT.getText():null));
 				}
 				break;
 			case IDENT:

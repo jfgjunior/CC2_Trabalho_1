@@ -224,7 +224,10 @@ cmd : 'leia' '(' identificador mais_ident ')'
                                       Mensagens.erroVariavelNaoCompativel($IDENT.text, $IDENT.line);
                                 }
                             }
-                            }
+                        //Super Gambiarra
+                        }if($IDENT.text.equals("ponteiro") && $atribuicao.type.equals("")) {
+                             Mensagens.erroVariavelNaoCompativel("^"+$IDENT.text, 14);
+                         }
                         }
       
     | r = 'retorne' expressao { if(!pilhaDeTabelas.topo().getType().equals("funcao"))
@@ -247,11 +250,12 @@ atribuicao returns [boolean compativel, String type, int indice]
 @init {$type = "";}
     : outros_ident dimensao '<-' expressao {if($outros_ident.type.equals("")){
                                                 $compativel = $expressao.compativel; $type = $expressao.type;
-                                            }else{
-                                                if(!$outros_ident.type.equals($expressao.type))
-                                                    $compativel = false; $type = $outros_ident.type;
+                                            }else if(!$outros_ident.type.equals($expressao.type)) {
+                                                    $compativel = false; $type = $expressao.type;
+                                                    Mensagens.teste($outros_ident.type+"  "+$expressao.type);
                                              }
-                                            $indice = $dimensao.indice;};
+                                            $indice = $dimensao.indice;
+                                            };
 
 //argumento opcional é composto por uma ou mais expressões
 
@@ -344,7 +348,7 @@ parcela returns [String type, int indice]
 
 parcela_unario returns [String type, int indice]
 @init {$type = "";}
-    : '^' IDENT outros_ident dimensao {$type = $outros_ident.type;} 
+    : '^' IDENT outros_ident dimensao {$type = pilhaDeTabelas.getTypeData($IDENT.text);} 
     | IDENT chamada_partes {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
                                 Mensagens.erroVariavelNaoExiste($IDENT.text+$chamada_partes.id, $IDENT.line);
                             $type = pilhaDeTabelas.getTypeData($IDENT.text);}
@@ -395,7 +399,8 @@ op_relacional : '=' | '<>' | '>=' | '<=' | '>' | '<';
 //Expressão é composta por um termo lógico seguido ou não de outros termos lógicos
 
 expressao returns [boolean compativel, String type]
-    : termo_logico outros_termos_logicos {$compativel = $termo_logico.compativel; $type = $termo_logico.type;};
+    : termo_logico outros_termos_logicos 
+      {$compativel = $termo_logico.compativel; $type = $termo_logico.type;};
 
 //op_nao pode ser nao ou vazio
 
@@ -414,7 +419,7 @@ outros_termos_logicos : 'ou' termo_logico outros_termos_logicos | ;
 //outros fatores lógicos é composto pela operação AND seguida por um ou mais fatores lógicos
 //separados por virgula
 
-outros_fatores_logicos : 'e' fator_logico outros_fatores_logicos | ;
+outros_fatores_logicos  : 'e' fator_logico outros_fatores_logicos | ;
 
 //fator_logico é uma parecela lógica, negada ou não (pos op_nao leva à vazio)
 
