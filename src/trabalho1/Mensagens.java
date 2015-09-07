@@ -39,7 +39,7 @@ public class Mensagens {
          text.append("Linha "+line+": incompatibilidade de parametros na chamada de "+funcao).append('\n');
     }
      
-     public static void teste(String b, String a, String c) {
-        text.append("IDENT "+b+" tipo IDENT "+a+" tipo atributo "+c).append('\n');
+     public static void teste(String a, String b, String c) {
+        text.append("Nome IDENT..: "+a+" Tipo IDENT..: "+b+" Tipo atribuicao..: "+c).append('\n');
     }
 }
