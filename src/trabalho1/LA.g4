@@ -84,10 +84,10 @@ ponteiros_opcionais returns [String ponteiros]
 
 //outros_ident permite a separação dos identificadores por virgula
 
-outros_ident returns [String id, String type]
-@init {$id = ""; $type = "";}
+outros_ident returns [String id, String name]
+@init {$id = ""; $name = "";}
     : ('.' ponteiros_opcionais IDENT dimensao {$id += "." + $IDENT.text; 
-                                               $type = pilhaDeTabelas.getTypeData($IDENT.text);})*;
+                                               $name = $IDENT.text;})*;
 
 //Define a dimensão sendo zero ou mais sequencidas de [expressão]
 
@@ -225,6 +225,10 @@ cmd : 'leia' '(' identificador mais_ident ')'
                             if(!(pilhaDeTabelas.getTypeData($IDENT.text).equals("real") && $atribuicao.type.equals("inteiro"))){
                                 if($atribuicao.indice != -1){
                                       Mensagens.erroVariavelNaoCompativel($IDENT.text+"["+$atribuicao.indice+"]", $IDENT.line);
+                                }else if(!$atribuicao.name.equals("")){
+                                     if(!tipos.getTipoAtr($atribuicao.name).equals(pilhaDeTabelas.getTypeData($IDENT.text))) {
+                                            Mensagens.erroVariavelNaoCompativel($IDENT.text+"."+$atribuicao.name, $IDENT.line);                                       
+                                     }
                                 }else{
                                       Mensagens.erroVariavelNaoCompativel($IDENT.text, $IDENT.line);
                                 }
@@ -253,13 +257,13 @@ senao_opcional : 'senao' comandos | ;
 
 chamada : '(' argumentos_opcional ')';
 
-atribuicao returns [boolean compativel, String type, int indice]
-@init {$type = "";}
-    : outros_ident dimensao '<-' expressao {if($outros_ident.type.equals("")){
+atribuicao returns [boolean compativel, String type, int indice, String name]
+@init {$type = ""; $name = "";}
+    : outros_ident dimensao '<-' expressao {if($outros_ident.name.equals("")){
                                                 $compativel = $expressao.compativel; $type = $expressao.type;
-                                            }else if(!$outros_ident.type.equals($expressao.type)) {
-                                                    $compativel = false; $type = $expressao.type;
-                                                    Mensagens.teste($outros_ident.type+"  "+$expressao.type);
+                                            }else{
+                                                $compativel = false; $type = $expressao.type;
+                                                $name = $outros_ident.name;
                                              }
                                             $indice = $dimensao.indice;
                                             };
@@ -387,8 +391,9 @@ parcela_unario returns [String type, int indice]
 //por vírgula, podendo ou não ter uma dimensão.
 //também pode ser composto por uma sequencia de caracteres diferentes de \n ou \r
 
-parcela_nao_unario returns [String type]
-    : '&' IDENT outros_ident dimensao {$type = $outros_ident.type;}
+parcela_nao_unario returns [String type, String name]
+@init {$name="";}
+    : '&' IDENT outros_ident dimensao {$type = ""; $name = $outros_ident.name;}
     | CADEIA {$type = "literal";};
 
 //Composto pela operação modulo seguida de uma ou mais parcelas separadas por vírgula
