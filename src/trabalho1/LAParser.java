@@ -1986,9 +1986,12 @@ public class LAParser extends Parser {
 				                                if(((CmdContext)_localctx).atribuicao.indice != -1){
 				                                      Mensagens.erroVariavelNaoCompativel((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null)+"["+((CmdContext)_localctx).atribuicao.indice+"]", (((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getLine():0));
 				                                }else if(!((CmdContext)_localctx).atribuicao.name.equals("")){
-				                                     if(!tipos.getTipoAtr(((CmdContext)_localctx).atribuicao.name).equals(pilhaDeTabelas.getTypeData((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null)))) {
-				                                            Mensagens.teste("atributo "+tipos.getTipoAtr(((CmdContext)_localctx).atribuicao.name)+" IDENT: "+tipos.getTipoAtr((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null)));
-				                                            Mensagens.erroVariavelNaoCompativel((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null)+"."+((CmdContext)_localctx).atribuicao.name, (((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getLine():0));                                       
+				                                     if(!tipos.getTipoAtr(((CmdContext)_localctx).atribuicao.name).equals(pilhaDeTabelas.getTypeData(((CmdContext)_localctx).atribuicao.type))) {
+				                                            if(tipos.getTipoAtr(((CmdContext)_localctx).atribuicao.name).equals("real") && ((CmdContext)_localctx).atribuicao.type.equals("inteiro")){
+				                                                //pass
+				                                            }else{
+				                                                Mensagens.erroVariavelNaoCompativel((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null)+"."+((CmdContext)_localctx).atribuicao.name, (((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getLine():0));
+				                                            }                                       
 				                                     }
 				                                }else{
 				                                      Mensagens.erroVariavelNaoCompativel((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null), (((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getLine():0));

@@ -226,9 +226,12 @@ cmd : 'leia' '(' identificador mais_ident ')'
                                 if($atribuicao.indice != -1){
                                       Mensagens.erroVariavelNaoCompativel($IDENT.text+"["+$atribuicao.indice+"]", $IDENT.line);
                                 }else if(!$atribuicao.name.equals("")){
-                                     if(!tipos.getTipoAtr($atribuicao.name).equals(pilhaDeTabelas.getTypeData($IDENT.text))) {
-                                            Mensagens.teste("atributo "+tipos.getTipoAtr($atribuicao.name)+" IDENT: "+tipos.getTipoAtr($IDENT.text));
-                                            Mensagens.erroVariavelNaoCompativel($IDENT.text+"."+$atribuicao.name, $IDENT.line);                                       
+                                     if(!tipos.getTipoAtr($atribuicao.name).equals(pilhaDeTabelas.getTypeData($atribuicao.type))) {
+                                            if(tipos.getTipoAtr($atribuicao.name).equals("real") && $atribuicao.type.equals("inteiro")){
+                                                //pass
+                                            }else{
+                                                Mensagens.erroVariavelNaoCompativel($IDENT.text+"."+$atribuicao.name, $IDENT.line);
+                                            }                                       
                                      }
                                 }else{
                                       Mensagens.erroVariavelNaoCompativel($IDENT.text, $IDENT.line);
