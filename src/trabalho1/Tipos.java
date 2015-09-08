@@ -38,6 +38,8 @@ public class Tipos {
             if (key.equals(tipo)) {
                 List<Pair> value = entry.getValue();
                 for (Pair pair : value) {
+                    //Mensagens.teste(pair.a.toString());
+                    //Mensagens.teste(pair.b.toString());
                     if(pair.a.toString().equals(atributo))
                         return true;
                 }

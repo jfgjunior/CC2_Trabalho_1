@@ -94,7 +94,6 @@ public class LAParser extends Parser {
 	PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
 	Tipos tipos = new Tipos();
 	Funcoes funcoes = new Funcoes();
-
 	private void stop(String msg) {
 	      throw new ParseCancellationException(msg);
 	}
@@ -752,6 +751,7 @@ public class LAParser extends Parser {
 				{
 				setState(214); ((TipoContext)_localctx).registro = registro();
 				((TipoContext)_localctx).tipodado =  "registro"; ((TipoContext)_localctx).atributos =  ((TipoContext)_localctx).registro.atributos;
+				                tipos.addTipo("registro", _localctx.atributos);
 				}
 				break;
 			case 13:

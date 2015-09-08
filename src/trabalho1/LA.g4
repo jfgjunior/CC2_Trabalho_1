@@ -5,7 +5,6 @@ grammar LA;
 PilhaDeTabelas pilhaDeTabelas = new PilhaDeTabelas();
 Tipos tipos = new Tipos();
 Funcoes funcoes = new Funcoes();
-
 private void stop(String msg) {
       throw new ParseCancellationException(msg);
 }
@@ -100,7 +99,8 @@ dimensao returns [int indice]
 // um ponteiro (^) seguido de um tipo básico
 
 tipo returns [String tipodado, List<Pair> atributos]
-    : registro {$tipodado = "registro"; $atributos = $registro.atributos;}| tipo_estendido {$tipodado = $tipo_estendido.tipodado;};
+    : registro {$tipodado = "registro"; $atributos = $registro.atributos;
+                tipos.addTipo("registro", $atributos);}| tipo_estendido {$tipodado = $tipo_estendido.tipodado;};
 
 //mais identificadores composto de ',' e outro identificador
 
