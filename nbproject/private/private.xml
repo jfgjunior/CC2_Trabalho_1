@@ -4,9 +4,12 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/LA.g4</file>
-            <file>file:/home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/Tipos.java</file>
+            <file>file:/home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/GeradorDeCodigo.java</file>
+            <file>file:/home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/LAListener.java</file>
+            <file>file:/home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/LAVisitor.java</file>
             <file>file:/home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/Mensagens.java</file>
-            <file>file:/home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/LAParser.java</file>
+            <file>file:/home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/LABaseVisitor.java</file>
+            <file>file:/home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/TestaAnalisadorSintatico.java</file>
         </group>
     </open-files>
 </project-private>

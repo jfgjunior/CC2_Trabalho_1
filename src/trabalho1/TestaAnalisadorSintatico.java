@@ -20,7 +20,8 @@ public class TestaAnalisadorSintatico {
         LAParser parser = new LAParser(tokens);
         parser.addErrorListener(new LAErrorListener(out));
         try {
-            parser.programa();
+            LAParser.ProgramaContext raiz = parser.programa();
+            
         } catch(ParseCancellationException pce) {
             if (pce.getMessage() != null)
                 out.println(pce.getMessage());
