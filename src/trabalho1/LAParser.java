@@ -1,4 +1,4 @@
-// Generated from /home/fernando/Materias/Compiladores2/CC2_Trabalho_1/src/trabalho1/LA.g4 by ANTLR 4.2.2
+// Generated from /Users/Fabioclug/NetBeansProjects/Comp2 - T1/src/trabalho1/LA.g4 by ANTLR 4.2.2
 package trabalho1;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -1772,7 +1772,7 @@ public class LAParser extends Parser {
 				setState(356); identificador();
 				setState(357); mais_ident();
 				setState(358); match(18);
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  1; 
 				}
 				break;
 
@@ -1784,7 +1784,7 @@ public class LAParser extends Parser {
 				setState(363); expressao();
 				setState(364); mais_expressao();
 				setState(365); match(18);
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  2; 
 				}
 				break;
 
@@ -1797,7 +1797,7 @@ public class LAParser extends Parser {
 				setState(371); comandos();
 				setState(372); senao_opcional();
 				setState(373); match(25);
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  3; 
 				}
 				break;
 
@@ -1810,7 +1810,7 @@ public class LAParser extends Parser {
 				setState(379); selecao();
 				setState(380); senao_opcional();
 				setState(381); match(29);
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  4; 
 				}
 				break;
 
@@ -1826,7 +1826,7 @@ public class LAParser extends Parser {
 				setState(390); match(4);
 				setState(391); comandos();
 				setState(392); match(33);
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  5; 
 				}
 				break;
 
@@ -1838,7 +1838,7 @@ public class LAParser extends Parser {
 				setState(397); match(4);
 				setState(398); comandos();
 				setState(399); match(11);
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  6; 
 				}
 				break;
 
@@ -1849,7 +1849,7 @@ public class LAParser extends Parser {
 				setState(403); comandos();
 				setState(404); match(12);
 				setState(405); expressao();
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  7; 
 				}
 				break;
 
@@ -1862,7 +1862,7 @@ public class LAParser extends Parser {
 				setState(411); dimensao();
 				setState(412); match(44);
 				setState(413); expressao();
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  8; 
 				}
 				break;
 
@@ -1871,7 +1871,7 @@ public class LAParser extends Parser {
 				{
 				setState(416); match(IDENT);
 				setState(417); chamada();
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  9; 
 				}
 				break;
 
@@ -1903,7 +1903,7 @@ public class LAParser extends Parser {
 				                             Mensagens.erroVariavelNaoCompativel("^"+(((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null), 14);
 				                         }
 				                        
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  10; 
 				}
 				break;
 
@@ -1914,7 +1914,7 @@ public class LAParser extends Parser {
 				setState(426); expressao();
 				 if(!pilhaDeTabelas.topo().getType().equals("funcao"))
 				                                    Mensagens.escopoNaoPermitido((((CmdContext)_localctx).r!=null?((CmdContext)_localctx).r.getLine():0));
-				 ((CmdContext)_localctx).tipoCmd =  0; 
+				 ((CmdContext)_localctx).tipoCmd =  11; 
 				}
 				break;
 			}

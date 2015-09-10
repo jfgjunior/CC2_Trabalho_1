@@ -211,15 +211,15 @@ comandos : cmd* ;
 //Define todas as instruções da linguagem e os seus formatos
 
 cmd returns [ int tipoCmd ]
-    : 'leia' '(' identificador mais_ident ')' { $tipoCmd = 0; }
-    | 'escreva' '(' expressao mais_expressao ')' { $tipoCmd = 0; }
-    | 'se' expressao 'entao' comandos senao_opcional 'fim_se' { $tipoCmd = 0; }
-    | 'caso' exp_aritmetica 'seja' selecao senao_opcional 'fim_caso' { $tipoCmd = 0; }
-    | 'para' IDENT '<-' exp_aritmetica 'ate' exp_aritmetica 'faca' comandos 'fim_para' { $tipoCmd = 0; }
-    | 'enquanto' expressao 'faca' comandos 'fim_enquanto' { $tipoCmd = 0; }
-    | 'faca' comandos 'ate' expressao { $tipoCmd = 0; }
-    | '^' IDENT outros_ident dimensao '<-' expressao { $tipoCmd = 0; }
-    | IDENT chamada { $tipoCmd = 0; }
+    : 'leia' '(' identificador mais_ident ')' { $tipoCmd = 1; }
+    | 'escreva' '(' expressao mais_expressao ')' { $tipoCmd = 2; }
+    | 'se' expressao 'entao' comandos senao_opcional 'fim_se' { $tipoCmd = 3; }
+    | 'caso' exp_aritmetica 'seja' selecao senao_opcional 'fim_caso' { $tipoCmd = 4; }
+    | 'para' IDENT '<-' exp_aritmetica 'ate' exp_aritmetica 'faca' comandos 'fim_para' { $tipoCmd = 5; }
+    | 'enquanto' expressao 'faca' comandos 'fim_enquanto' { $tipoCmd = 6; }
+    | 'faca' comandos 'ate' expressao { $tipoCmd = 7; }
+    | '^' IDENT outros_ident dimensao '<-' expressao { $tipoCmd = 8; }
+    | IDENT chamada { $tipoCmd = 9; }
     | IDENT atribuicao {if(!pilhaDeTabelas.existeSimbolo($IDENT.text)){
                             Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);
                         }else if(!$atribuicao.compativel && !$atribuicao.type.equals("") && !pilhaDeTabelas.getTypeData($IDENT.text).equals($atribuicao.type)){
@@ -243,10 +243,10 @@ cmd returns [ int tipoCmd ]
                              Mensagens.erroVariavelNaoCompativel("^"+$IDENT.text, 14);
                          }
                         }
-      { $tipoCmd = 0; }
+      { $tipoCmd = 10; }
     | r = 'retorne' expressao { if(!pilhaDeTabelas.topo().getType().equals("funcao"))
                                     Mensagens.escopoNaoPermitido($r.line);}
-    { $tipoCmd = 0; }
+    { $tipoCmd = 11; }
     ;
 
 //Permite que exista mais de uma expressão, separando-as por vírgula
