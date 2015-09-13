@@ -9,6 +9,8 @@ import java.util.List;
 import trabalho1.LAParser.CmdContext;
 import trabalho1.LAParser.CorpoContext;
 import trabalho1.LAParser.Decl_local_globalContext;
+import trabalho1.LAParser.Declaracao_globalContext;
+import trabalho1.LAParser.Declaracao_localContext;
 import trabalho1.LAParser.DeclaracoesContext;
 import trabalho1.LAParser.ProgramaContext;
 
@@ -19,22 +21,43 @@ import trabalho1.LAParser.ProgramaContext;
 public class GeradorDeCodigo extends LABaseVisitor<Void> {
 
     StringBuffer codigo;
+    String ident;
 
     public GeradorDeCodigo() {
         codigo = new StringBuffer();
+        ident = "";
     }
-
-    @Override
-    public Void visitDeclaracao_local(LAParser.Declaracao_localContext ctx) {
-        codigo.append("\t"+ctx.name+" "+ctx.tipoVar);
-        return null;
-        //return super.visitDeclaracao_local(ctx); //To change body of generated methods, choose Tools | Templates.
+    
+    private void addLine(String line) {
+        codigo.append(ident + line + '\n');
     }
-
+    
+    private void addIdent() {
+        ident += "\t";
+    }
+    
+    private void removeIdent() {
+        ident = ident.substring(0, ident.length()-1);
+    }
+    
+    private void appendText(String text) {
+        codigo.append(text);
+    }
+    
+    public String convertType(String type) {
+        if (type.equals("inteiro"))
+            return "int";
+        else if (type.equals("real"))
+            return "float";
+        else if (type.equals("logico"))
+            return "bool";
+        else return "char";
+    }
     
     @Override
     public Void visitPrograma(ProgramaContext ctx) {
-        codigo.append("#include <stdio.h>\n#include <stdlib.h>\n\n");
+        addLine("#include <stdio.h>");
+        addLine("#include <stdlib.h>\n");
         
         DeclaracoesContext declaracoes = ctx.declaracoes();
         List<Decl_local_globalContext> listaDecl = declaracoes.decl_local_global();
@@ -42,23 +65,65 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
             visitDecl_local_global(d);
         }
         
-        codigo.append("int main() {\n");
+        addLine("int main() {");
+        addIdent();
         CorpoContext corpo = ctx.corpo();
+        
+        List<Declaracao_localContext> listadlocais = corpo.declaracoes_locais().declaracao_local();
+        for (Declaracao_localContext dec : listadlocais) {
+            visitDeclaracao_local(dec);
+        }
+        
         List<CmdContext> listaC = corpo.comandos().cmd();
         for (CmdContext c : listaC) {
             visitCmd(c);
         }
         
-        codigo.append("\treturn 0;\n}");
+        addLine("return 0;");
+        removeIdent();
+        addLine("}");       
         return null;
         //return super.visitPrograma(ctx); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public Void visitDecl_local_global(Decl_local_globalContext ctx) {
+        if(ctx.dec == 1)
+            visitDeclaracao_local(ctx.declaracao_local());
+        else
+            visitDeclaracao_global(ctx.declaracao_global());
         return null;
         //return super.visitDecl_local_global(ctx); //To change body of generated methods, choose Tools | Templates.
     } 
+
+    @Override
+    public Void visitDeclaracao_global(Declaracao_globalContext ctx) {
+        
+        return null;
+        //return super.visitDeclaracao_global(ctx); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    @Override
+    public Void visitDeclaracao_local(Declaracao_localContext ctx) {
+        switch(ctx.tipoDec) {
+            case 1:
+//                int dimensao;
+//                dimensao = ctx.variavel().dimensao().indice;
+//                String dim = "";
+//                if (dimensao != -1)
+//                    dim = "[" + dimensao + "]";
+                addLine(convertType(ctx.tipoVar) + " " + ctx.name + ";");
+                break;
+            case 2:
+                addLine("#define " + ctx.IDENT.getText());
+                break;
+            case 3:
+                addLine("typedef ");
+                break;
+        }
+        return null;
+        //return super.visitDeclaracao_local(ctx); //To change body of generated methods, choose Tools | Templates.
+    }
     
     @Override
     public Void visitCmd(CmdContext ctx) {
@@ -69,13 +134,18 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
             type = 'f';
         else
             type = 's';
+        //String var = ctx.nameVar;
         
         switch (ctx.tipoCmd) {
             case 1:
-                codigo.append("\tscanf(\"%"+type+"" + "\",&"+ctx.nameVar+");\n");
+                if(type == 's')
+                    addLine("gets(" + ctx.nameVar + ");");
+                else
+                    codigo.append("\tscanf(\"%"+type+"" + "\",&"+ctx.nameVar+");\n");
                 break;
             case 2:
-                codigo.append("\tprintf(\"%"+type+"\","+ctx.nameVar+");\n");
+                String var = ctx.expressao().termo_logico().fator_logico().parcela_logica().exp_relacional().exp_aritmetica().termo().fator().parcela().parcela_unario().IDENT.getText();
+                codigo.append("\tprintf(\"%"+type+"\","+var+");\n");
                 break;
             case 3:
                 codigo.append("\tif\n");

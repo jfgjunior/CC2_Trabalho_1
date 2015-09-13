@@ -24,19 +24,21 @@ declaracoes : decl_local_global*;
 
 //Define a decl_local_global sendo uma delcaração local ou global
 
-decl_local_global : declaracao_local | declaracao_global;
+decl_local_global returns [int dec]: declaracao_local {$dec = 1;}| declaracao_global {$dec = 2;};
 
 //A declaração local é composta por a palavra reservada "declare" seguida da variável ou
 //pela palavre reservada "constante" seguida de um identificador, dois pontos, um tipo e uma constante
 //ou pela palavra reservada "tipo" seguida de um identificador, dois pontos e o tipo
 
-declaracao_local returns [String name, String tipoVar] 
-    : 'declare' variavel {$name = $variavel.name; $tipoVar = $variavel.tipoVar;}
+declaracao_local returns [int tipoDec, String name, String tipoVar] 
+    : 'declare' variavel {$name = $variavel.name; $tipoVar = $variavel.tipoVar; $tipoDec = 1;}
     | 'constante' IDENT ':' tipo_basico '=' valor_constante
-      {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_basico.tipodado, "constante");}
+      {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_basico.tipodado, "constante");
+       $tipoDec = 2;}
     | 'tipo' IDENT ':' tipo
       {tipos.addTipo($IDENT.text, $tipo.atributos);
-       pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "indefinido", "tipo");};
+       pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "indefinido", "tipo");
+       $tipoDec = 3;};
 
 //uma variável é do tipo "nome[expressão]" ou "nome" seguido de dois pontos e o tipo
 
