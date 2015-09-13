@@ -25,6 +25,14 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     }
 
     @Override
+    public Void visitDeclaracao_local(LAParser.Declaracao_localContext ctx) {
+        codigo.append("\t"+ctx.name+" "+ctx.tipoVar);
+        return null;
+        //return super.visitDeclaracao_local(ctx); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    
+    @Override
     public Void visitPrograma(ProgramaContext ctx) {
         codigo.append("#include <stdio.h>\n#include <stdlib.h>\n\n");
         
@@ -54,12 +62,20 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     
     @Override
     public Void visitCmd(CmdContext ctx) {
+        char type;
+        if(ctx.tipoVar.equals("inteiro"))
+            type = 'd';
+        else if(ctx.tipoVar.equals("real"))
+            type = 'f';
+        else
+            type = 's';
+        
         switch (ctx.tipoCmd) {
             case 1:
-                codigo.append("\tscanf(\"" + "\");\n");
+                codigo.append("\tscanf(\"%"+type+"" + "\",&"+ctx.nameVar+");\n");
                 break;
             case 2:
-                codigo.append("\tprintf();\n");
+                codigo.append("\tprintf(\"%"+type+"\","+ctx.nameVar+");\n");
                 break;
             case 3:
                 codigo.append("\tif\n");

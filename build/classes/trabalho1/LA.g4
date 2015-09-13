@@ -30,16 +30,18 @@ decl_local_global : declaracao_local | declaracao_global;
 //pela palavre reservada "constante" seguida de um identificador, dois pontos, um tipo e uma constante
 //ou pela palavra reservada "tipo" seguida de um identificador, dois pontos e o tipo
 
-declaracao_local : 'declare' variavel
-                 | 'constante' IDENT ':' tipo_basico '=' valor_constante
-                   {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_basico.tipodado, "constante");}
-                 | 'tipo' IDENT ':' tipo
-                   {tipos.addTipo($IDENT.text, $tipo.atributos);
-                    pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "indefinido", "tipo");};
+declaracao_local returns [String name, String tipoVar] 
+    : 'declare' variavel {$name = $variavel.name; $tipoVar = $variavel.tipoVar;}
+    | 'constante' IDENT ':' tipo_basico '=' valor_constante
+      {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, $tipo_basico.tipodado, "constante");}
+    | 'tipo' IDENT ':' tipo
+      {tipos.addTipo($IDENT.text, $tipo.atributos);
+       pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "indefinido", "tipo");};
 
 //uma variável é do tipo "nome[expressão]" ou "nome" seguido de dois pontos e o tipo
 
-variavel : IDENT dimensao mais_var ':' tipo
+variavel returns [String name, String tipoVar]
+    : IDENT dimensao mais_var ':' tipo
          {  List<Pair> nomes = new ArrayList<Pair>();
             nomes = $mais_var.nomes;
             Pair pair = new Pair($IDENT.text, $IDENT.line);
@@ -51,6 +53,9 @@ variavel : IDENT dimensao mais_var ':' tipo
                     Mensagens.erroVariavelJaExiste(var.a.toString(), Integer.parseInt(var.b.toString()));
                 
             }
+            
+            $name = $IDENT.text;
+            $tipoVar = $tipo.tipodado;
          };
          
 
@@ -64,7 +69,8 @@ mais_var returns [List<Pair> nomes]
 //Podendo ou não ter uma dimensão e podendo ou não ser composto de outros identificadores
 //separados por virgula
 
-identificador : ponteiros_opcionais IDENT dimensao outros_ident 
+identificador returns [String nameVar] 
+    : ponteiros_opcionais IDENT dimensao outros_ident {$nameVar = $IDENT.text;} 
                 {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
                      Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);
                      else if (!$outros_ident.id.equals("")) {
@@ -206,19 +212,21 @@ corpo : declaracoes_locais comandos;
 //Define que os commandos devem possuir ao menos uma instrução e podem ser seguidos de mais
 //instruções
 
-comandos : cmd comandos | ;
+comandos : cmd* ;
 
 //Define todas as instruções da linguagem e os seus formatos
 
-cmd : 'leia' '(' identificador mais_ident ')'
-    | 'escreva' '(' expressao mais_expressao ')'
-    | 'se' expressao 'entao' comandos senao_opcional 'fim_se'
-    | 'caso' exp_aritmetica 'seja' selecao senao_opcional 'fim_caso'
-    | 'para' IDENT '<-' exp_aritmetica 'ate' exp_aritmetica 'faca' comandos 'fim_para'
-    | 'enquanto' expressao 'faca' comandos 'fim_enquanto'
-    | 'faca' comandos 'ate' expressao
-    | '^' IDENT outros_ident dimensao '<-' expressao
-    | IDENT chamada
+cmd returns [ int tipoCmd, String nameVar,  String tipoVar]
+@id {$nameVar = ""; $tipoVar = "";}
+    : 'leia' '(' identificador mais_ident ')' { $tipoCmd = 1; $nameVar = $identificador.nameVar; $tipoVar = pilhaDeTabelas.getTypeData($identificador.nameVar);}
+    | 'escreva' '(' expressao mais_expressao ')' { $tipoCmd = 2; $nameVar = $expressao.name; $tipoVar = $expressao.type; }
+    | 'se' expressao 'entao' comandos senao_opcional 'fim_se' { $tipoCmd = 3; }
+    | 'caso' exp_aritmetica 'seja' selecao senao_opcional 'fim_caso' { $tipoCmd = 4; }
+    | 'para' IDENT '<-' exp_aritmetica 'ate' exp_aritmetica 'faca' comandos 'fim_para' { $tipoCmd = 5; $nameVar = $IDENT.text; }
+    | 'enquanto' expressao 'faca' comandos 'fim_enquanto' { $tipoCmd = 6; }
+    | 'faca' comandos 'ate' expressao { $tipoCmd = 7; }
+    | '^' IDENT outros_ident dimensao '<-' expressao { $tipoCmd = 8; }
+    | IDENT chamada { $tipoCmd = 9; }
     | IDENT atribuicao {if(!pilhaDeTabelas.existeSimbolo($IDENT.text)){
                             Mensagens.erroVariavelNaoExiste($IDENT.text, $IDENT.line);
                         }else if(!$atribuicao.compativel && !$atribuicao.type.equals("") && !pilhaDeTabelas.getTypeData($IDENT.text).equals($atribuicao.type)){
@@ -237,14 +245,16 @@ cmd : 'leia' '(' identificador mais_ident ')'
                                       Mensagens.erroVariavelNaoCompativel($IDENT.text, $IDENT.line);
                                 }
                             }
-                        //Super Gambiarra
+               
                         }if($IDENT.text.equals("ponteiro") && $atribuicao.type.equals("")) {
                              Mensagens.erroVariavelNaoCompativel("^"+$IDENT.text, 14);
                          }
                         }
-      
+      { $tipoCmd = 10; }
     | r = 'retorne' expressao { if(!pilhaDeTabelas.topo().getType().equals("funcao"))
-                                    Mensagens.escopoNaoPermitido($r.line);};
+                                    Mensagens.escopoNaoPermitido($r.line);}
+    { $tipoCmd = 11; }
+    ;
 
 //Permite que exista mais de uma expressão, separando-as por vírgula
 
@@ -396,8 +406,8 @@ parcela_unario returns [String type, int indice, String name]
                                 if (erro == true)
                                     Mensagens.erroIncompatibilidadeParametros($IDENT.text, $IDENT.line);
                             } $name = $chamada_partes.name;}
-    | NUM_INT {$type = "inteiro"; $indice = Integer.parseInt($NUM_INT.text);}
-    | NUM_REAL {$type = "real";}
+    | NUM_INT {$type = "inteiro"; $indice = Integer.parseInt($NUM_INT.text); $name = $NUM_INT.text;}
+    | NUM_REAL {$type = "real"; $name = $NUM_REAL.text;}
     | '(' expressao ')'; //{$type = $expressao.type;};
 
 //Parcela não unario é composta pela operação AND seguida de um ou mais identificadores separados
@@ -407,7 +417,7 @@ parcela_unario returns [String type, int indice, String name]
 parcela_nao_unario returns [String type, String name]
 @init {$name="";}
     : '&' IDENT outros_ident dimensao {$type = ""; $name = $outros_ident.name;}
-    | CADEIA {$type = "literal";};
+    | CADEIA {$type = "literal"; $name = $CADEIA.text;};
 
 //Composto pela operação modulo seguida de uma ou mais parcelas separadas por vírgula
 
