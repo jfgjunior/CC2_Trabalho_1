@@ -6,13 +6,38 @@
 package trabalho1;
 
 import java.util.List;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import trabalho1.LAParser.Chamada_partesContext;
 import trabalho1.LAParser.CmdContext;
 import trabalho1.LAParser.CorpoContext;
 import trabalho1.LAParser.Decl_local_globalContext;
 import trabalho1.LAParser.Declaracao_globalContext;
 import trabalho1.LAParser.Declaracao_localContext;
 import trabalho1.LAParser.DeclaracoesContext;
+import trabalho1.LAParser.DimensaoContext;
+import trabalho1.LAParser.Exp_aritmeticaContext;
+import trabalho1.LAParser.ExpressaoContext;
+import trabalho1.LAParser.FatorContext;
+import trabalho1.LAParser.Fator_logicoContext;
+import trabalho1.LAParser.Mais_varContext;
+import trabalho1.LAParser.Op_adicaoContext;
+import trabalho1.LAParser.Op_multiplicacaoContext;
+import trabalho1.LAParser.Op_naoContext;
+import trabalho1.LAParser.Op_unarioContext;
+import trabalho1.LAParser.Outras_parcelasContext;
+import trabalho1.LAParser.Outros_fatoresContext;
+import trabalho1.LAParser.Outros_fatores_logicosContext;
+import trabalho1.LAParser.Outros_identContext;
+import trabalho1.LAParser.Outros_termosContext;
+import trabalho1.LAParser.Outros_termos_logicosContext;
+import trabalho1.LAParser.ParcelaContext;
+import trabalho1.LAParser.Parcela_logicaContext;
+import trabalho1.LAParser.Parcela_nao_unarioContext;
+import trabalho1.LAParser.Parcela_unarioContext;
 import trabalho1.LAParser.ProgramaContext;
+import trabalho1.LAParser.TermoContext;
+import trabalho1.LAParser.Termo_logicoContext;
+import trabalho1.LAParser.VariavelContext;
 
 /**
  *
@@ -20,12 +45,14 @@ import trabalho1.LAParser.ProgramaContext;
  */
 public class GeradorDeCodigo extends LABaseVisitor<Void> {
 
-    StringBuffer codigo;
-    String ident;
+    private StringBuffer codigo;
+    private String ident;
+    boolean printControl;
 
     public GeradorDeCodigo() {
         codigo = new StringBuffer();
         ident = "";
+        printControl = false;
     }
     
     private void addLine(String line) {
@@ -44,6 +71,10 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         codigo.append(text);
     }
     
+    private void appendIdentText(String text) {
+        codigo.append(ident + text);
+    }
+    
     public String convertType(String type) {
         if (type.equals("inteiro"))
             return "int";
@@ -52,6 +83,16 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         else if (type.equals("logico"))
             return "bool";
         else return "char";
+    }
+    
+    private char getTypeMap(String type) {
+        if (type.equals("int"))
+            return 'd';
+        else if (type.equals("float"))
+            return 'f';
+        else if (type.equals("bool"))
+            return ' ';
+        else return 's';
     }
     
     @Override
@@ -107,12 +148,12 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     public Void visitDeclaracao_local(Declaracao_localContext ctx) {
         switch(ctx.tipoDec) {
             case 1:
-//                int dimensao;
-//                dimensao = ctx.variavel().dimensao().indice;
-//                String dim = "";
-//                if (dimensao != -1)
-//                    dim = "[" + dimensao + "]";
-                addLine(convertType(ctx.tipoVar) + " " + ctx.name + ";");
+                String dim = "";
+                if(ctx.tipoVar.equals("literal"))
+                    dim = "[80]";
+                appendIdentText(convertType(ctx.tipoVar) + " ");
+                visitVariavel(ctx.variavel());
+                appendText(dim + ";\n");
                 break;
             case 2:
                 addLine("#define " + ctx.IDENT.getText());
@@ -122,7 +163,229 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 break;
         }
         return null;
-        //return super.visitDeclaracao_local(ctx); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Void visitVariavel(VariavelContext ctx) {
+        String var = ctx.IDENT.getText();
+        appendText(var + SvisitDimensao(ctx.dimensao()));
+        visitMais_var(ctx.mais_var());
+        return null;
+    }
+
+    @Override
+    public Void visitMais_var(Mais_varContext ctx) {
+        List<TerminalNode> vars = ctx.IDENT();
+        List<DimensaoContext> dims = ctx.dimensao();
+        for (int i = 0; i < vars.size(); i++) {
+            appendText("," + vars.get(i).getText() + SvisitDimensao(dims.get(i)));
+        }
+        return null;
+    }
+
+    public String SvisitDimensao(DimensaoContext ctx) {
+        String dim = "";
+        for(Exp_aritmeticaContext exp : ctx.exp_aritmetica()) {
+            dim += "[" + SvisitExp_aritmetica(exp) + "]";
+        }
+        return dim;
+    }
+
+    public String SvisitExp_aritmetica(Exp_aritmeticaContext ctx) {
+        if(ctx != null) {
+            return SvisitTermo(ctx.termo()) + SvisitOutros_termos(ctx.outros_termos());
+        }
+        return "";
+    }
+
+    public String SvisitTermo(TermoContext ctx) {
+        return SvisitFator(ctx.fator()) + SvisitOutros_fatores(ctx.outros_fatores());
+    }
+    
+    public String SvisitOutros_termos(Outros_termosContext ctx) {
+        List<Op_adicaoContext> ops = ctx.op_adicao();
+        List<TermoContext> termos = ctx.termo();
+        String o_termos = "";
+        for (int i = 0; i < ops.size(); i++) {
+            o_termos += SvisitOp_adicao(ops.get(i)) + SvisitTermo(termos.get(i));
+        }
+        return o_termos;
+    }
+
+    public String SvisitOp_adicao(Op_adicaoContext ctx) {
+        return ctx.getText();
+    }
+
+    public String SvisitFator(FatorContext ctx) {
+        return SvisitParcela(ctx.parcela()) + SvisitOutras_parcelas(ctx.outras_parcelas());
+    }
+
+    public String SvisitOutros_fatores(Outros_fatoresContext ctx) {
+        List<Op_multiplicacaoContext> ops = ctx.op_multiplicacao();
+        List<FatorContext> fats = ctx.fator();
+        String outros_fat = "";
+        for (int i = 0; i < ops.size(); i++) {
+            outros_fat += SvisitOp_multiplicacao(ops.get(i)) + SvisitFator(fats.get(i));
+        }
+        return outros_fat;
+    }
+
+    public String SvisitOp_multiplicacao(Op_multiplicacaoContext ctx) {
+        // NAO SEI SE ESTA CERTO
+        return ctx.getText();
+    }
+
+    public String SvisitParcela(ParcelaContext ctx) {
+        if(ctx.parcelaTipo == 1) {
+            return SvisitOp_unario(ctx.op_unario()) + SvisitParcela_unario(ctx.parcela_unario());
+        }
+        else return SvisitParcela_nao_unario(ctx.parcela_nao_unario());
+    }
+
+    public String SvisitOutras_parcelas(Outras_parcelasContext ctx) {
+        String outras_parc = "";
+        for (ParcelaContext p : ctx.parcela()) {
+            outras_parc += "%" + SvisitParcela(p);
+        }
+        return outras_parc;
+    }
+
+    public String SvisitOp_unario(Op_unarioContext ctx) {
+        return ctx.getText();
+    }
+
+    public String SvisitParcela_unario(Parcela_unarioContext ctx) {
+        String parc = "";
+        switch(ctx.tipoParc) {
+            case 1:
+                parc =  "*" + ctx.IDENT.getText() + SvisitOutros_ident(ctx.outros_ident()) + SvisitDimensao(ctx.dimensao());
+                break;
+            case 2:
+                parc =  ctx.IDENT.getText() + SvisitChamada_partes(ctx.chamada_partes());
+                break;
+            case 3:
+                parc = ctx.NUM_INT.getText();
+                break;
+            case 4:
+                parc = ctx.NUM_REAL.getText();
+                break;
+            case 5:
+                parc = "(" + SvisitExpressao(ctx.expressao()) + ")";
+                break;      
+        }
+        return parc;
+    }
+
+    public String SvisitParcela_nao_unario(Parcela_nao_unarioContext ctx) {
+        if(ctx.type.equals("literal")) {
+            return ctx.CADEIA.getText();
+        }
+        else {
+            return "&" + ctx.IDENT().getText() + SvisitOutros_ident(ctx.outros_ident()) + SvisitDimensao(ctx.dimensao());
+        }
+    }
+
+    public String SvisitOutros_ident(Outros_identContext ctx) {
+        List<TerminalNode> idents = ctx.IDENT();
+        List<DimensaoContext> dims = ctx.dimensao();
+        String o_idents = "";
+        for (int i = 0; i < idents.size(); i++) {
+            o_idents += "." + idents.get(i).getText() + SvisitDimensao(dims.get(i));
+        }
+        return o_idents;
+    }
+
+    public String SvisitExpressao(ExpressaoContext ctx) {
+        return SvisitTermo_logico(ctx.termo_logico()) + SvisitOutros_termos_logicos(ctx.outros_termos_logicos());
+    }
+
+    public String SvisitTermo_logico(Termo_logicoContext ctx) {
+        if(ctx != null) {
+            return SvisitFator_logico(ctx.fator_logico()) + SvisitOutros_fatores_logicos(ctx.outros_fatores_logicos());
+        }
+        return "";
+    }
+
+    public String SvisitOutros_termos_logicos(Outros_termos_logicosContext ctx) {
+        if (ctx.termo_logico() != null) {
+            return " || " + SvisitTermo_logico(ctx.termo_logico()) + SvisitOutros_termos_logicos(ctx.outros_termos_logicos());
+        }
+        return "";
+    }
+
+    public String SvisitFator_logico(Fator_logicoContext ctx) {
+        if (ctx != null) {
+            return SvisitOp_nao(ctx.op_nao()) + SvisitParcela_logica(ctx.parcela_logica());
+        }
+        return "";
+    }
+    
+    public String SvisitOutros_fatores_logicos(Outros_fatores_logicosContext ctx) {
+        if (ctx.fator_logico() != null) {
+            return " && " + SvisitFator_logico(ctx.fator_logico()) + SvisitOutros_fatores_logicos(ctx.outros_fatores_logicos());
+        }
+        return "";
+    }
+
+    public String SvisitOp_nao(Op_naoContext ctx) {
+        //appendText(ctx.getText());
+        return ctx.getText();
+    }
+
+    public String SvisitParcela_logica(Parcela_logicaContext ctx) {
+        String parc = "";
+        switch(ctx.tipoParc) {
+            case 1:
+                parc =  " true";
+                break;
+            case 2:
+                parc =  " false";
+                break;
+            case 3:
+                parc = SvisitExp_relacional(ctx.exp_relacional());
+                break;
+        }
+        return parc;
+    }
+
+    public String SvisitExp_relacional(LAParser.Exp_relacionalContext ctx) {
+        return SvisitExp_aritmetica(ctx.exp_aritmetica()) + SvisitOp_opcional(ctx.op_opcional());
+    }
+
+    public String SvisitOp_opcional(LAParser.Op_opcionalContext ctx) {
+        return SvisitOp_relacional(ctx.op_relacional()) + SvisitExp_aritmetica(ctx.exp_aritmetica());
+        
+    }
+
+    public String SvisitOp_relacional(LAParser.Op_relacionalContext ctx) {
+        if(ctx != null)
+            return ctx.getText();
+        return "";
+    }
+
+    public String SvisitChamada_partes(Chamada_partesContext ctx) {
+        String chamada = "";
+        switch(ctx.tipoChamada) {
+            case 1:
+                chamada = "(" + SvisitExpressao(ctx.expressao()) + SvisitMais_expressao(ctx.mais_expressao()) + ")";
+                break;
+            case 2:
+                chamada = SvisitOutros_ident(ctx.outros_ident()) + SvisitDimensao(ctx.dimensao());
+                break;
+            case 3:
+                break;
+        }
+        return chamada;
+    }
+
+    public String SvisitMais_expressao(LAParser.Mais_expressaoContext ctx) {
+        List<ExpressaoContext> exps = ctx.expressao();
+        String mais_exp = "";
+        for(ExpressaoContext e : exps) {
+            //appendText(", ");
+            mais_exp += SvisitExpressao(e);
+        }
+        return mais_exp;
     }
     
     @Override
@@ -141,11 +404,21 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 if(type == 's')
                     addLine("gets(" + ctx.nameVar + ");");
                 else
-                    codigo.append("\tscanf(\"%"+type+"" + "\",&"+ctx.nameVar+");\n");
+                    addLine("scanf(\"%"+type+"" + "\",&"+ctx.nameVar+");");
                 break;
             case 2:
-                String var = ctx.expressao().termo_logico().fator_logico().parcela_logica().exp_relacional().exp_aritmetica().termo().fator().parcela().parcela_unario().IDENT.getText();
-                codigo.append("\tprintf(\"%"+type+"\","+var+");\n");
+                String tipo_e = ctx.expressao.type;
+                List<String> tipos_mais = ctx.mais_expressao().tipos;
+                char tipo = getTypeMap(convertType(tipo_e));
+                addLine("printf(\"%"+ tipo +"\"," + SvisitExpressao(ctx.expressao()) + ");");
+                tipo_e = SvisitMais_expressao(ctx.mais_expressao());
+                String[] parts = tipo_e.split(",");
+                for(int i = 0; i < tipos_mais.size(); i++) {
+                    tipo = getTypeMap(convertType(tipos_mais.get(i)));
+                    addLine("printf(\"%"+ tipo +"\"," + parts[i] + ");");
+                }
+                
+                //addLine("printf(" + SvisitExpressao(ctx.expressao()) + SvisitMais_expressao(ctx.mais_expressao()) + ")");
                 break;
             case 3:
                 codigo.append("\tif\n");
@@ -173,7 +446,6 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 break;
         }
         return null;
-        //return super.visitCmd(ctx); //To change body of generated methods, choose Tools | Templates.
     }
 
     public String getCodigo() {

@@ -370,10 +370,10 @@ outros_fatores : (op_multiplicacao fator)*;
 //parecela é composta por um operador unario seguido de uma parecela unária ou
 //seguido por uma parecela não unária
 
-parcela returns [String type, int indice, String name]
+parcela returns [String type, int indice, String name, int parcelaTipo]
 @init {$name = "";}
-    : op_unario parcela_unario {$type = $parcela_unario.type; $indice = $parcela_unario.indice; $name = $parcela_unario.name;}
-    | parcela_nao_unario {$type = $parcela_nao_unario.type;};
+    : op_unario parcela_unario {$type = $parcela_unario.type; $indice = $parcela_unario.indice; $name = $parcela_unario.name; $parcelaTipo = 1;}
+    | parcela_nao_unario {$type = $parcela_nao_unario.type; $parcelaTipo = 2;};
 
 //parcela_unario é composta de um ponteiro (^) seguido de um identificador podendo ou não ter 
 //uma dimensão ou
@@ -382,9 +382,9 @@ parcela returns [String type, int indice, String name]
 //um número real ou
 //uma expressão entre parenteses
 
-parcela_unario returns [String type, int indice, String name]
+parcela_unario returns [String type, int indice, String name, int tipoParc]
 @init {$type = ""; $indice = -1; $name = "";}
-    : '^' IDENT outros_ident dimensao {$type = pilhaDeTabelas.getTypeData($IDENT.text);} 
+    : '^' IDENT outros_ident dimensao {$type = pilhaDeTabelas.getTypeData($IDENT.text); $tipoParc = 1;} 
     | IDENT chamada_partes {if(!pilhaDeTabelas.existeSimbolo($IDENT.text))
                                 Mensagens.erroVariavelNaoExiste($IDENT.text+$chamada_partes.id, $IDENT.line);
                             $type = pilhaDeTabelas.getTypeData($IDENT.text);
@@ -407,10 +407,11 @@ parcela_unario returns [String type, int indice, String name]
                                 }
                                 if (erro == true)
                                     Mensagens.erroIncompatibilidadeParametros($IDENT.text, $IDENT.line);
-                            } $name = $chamada_partes.name;}
-    | NUM_INT {$type = "inteiro"; $indice = Integer.parseInt($NUM_INT.text); $name = $NUM_INT.text;}
-    | NUM_REAL {$type = "real"; $name = $NUM_REAL.text;}
-    | '(' expressao ')'; //{$type = $expressao.type;};
+                            } $name = $chamada_partes.name;
+                            $tipoParc = 2;}
+    | NUM_INT {$type = "inteiro"; $indice = Integer.parseInt($NUM_INT.text); $name = $NUM_INT.text; $tipoParc = 3;}
+    | NUM_REAL {$type = "real"; $name = $NUM_REAL.text; $tipoParc = 4;}
+    | '(' expressao ')' {$tipoParc = 5;}; //{$type = $expressao.type;};
 
 //Parcela não unario é composta pela operação AND seguida de um ou mais identificadores separados
 //por vírgula, podendo ou não ter uma dimensão.
@@ -428,10 +429,10 @@ outras_parcelas : ('%' parcela)*;
 //chamada partes é definida por uma ou mais expressões separadas por vírgula entre parentes ou
 // por identificadores, também separados por virgulas podendo ou não ter alguma dimensão
 
-chamada_partes returns [String id, List<String> tipos, String name]
+chamada_partes returns [String id, List<String> tipos, String name, int tipoChamada]
 @init {$id = ""; $tipos = new ArrayList<String>(); $name = "";}
-    : '(' expressao mais_expressao {$tipos = $mais_expressao.tipos; $tipos.add(0, $expressao.type);}')'
-    | outros_ident dimensao {$id = $outros_ident.id; $name = $outros_ident.name;}| ;
+    : '(' expressao mais_expressao {$tipos = $mais_expressao.tipos; $tipos.add(0, $expressao.type); $tipoChamada = 1;}')'
+    | outros_ident dimensao {$id = $outros_ident.id; $name = $outros_ident.name; $tipoChamada = 2;}| {$tipoChamada = 3;};
 
 //Define a expressão relacinal como uma expressão aritimética seguida de um operadr opcional ou não
 
@@ -490,11 +491,11 @@ fator_logico returns [boolean compativel, String type, String name]
 
 //Parcela_logica pode ser verdadeira, falsa ou uma expressão relacional
 
-parcela_logica returns [boolean compativel, String type, String name]
+parcela_logica returns [boolean compativel, String type, String name, int tipoParc]
 @init {$name = "";}
-    : 'verdadeiro' {$compativel = false; $type = "logico";}
-    | 'falso' {$compativel = false; $type = "logico";}
-    | exp_relacional {$compativel = $exp_relacional.compativel; $type = $exp_relacional.type; $name = $exp_relacional.name;};
+    : 'verdadeiro' {$compativel = false; $type = "logico"; $tipoParc = 1;}
+    | 'falso' {$compativel = false; $type = "logico"; $tipoParc = 2;}
+    | exp_relacional {$compativel = $exp_relacional.compativel; $type = $exp_relacional.type; $name = $exp_relacional.name; $tipoParc = 3;};
 
 //Identificador, inicia com letras ou underscore seguido zero ou mais letras, numeros
 //ou underscore
