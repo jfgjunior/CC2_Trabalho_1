@@ -20,6 +20,7 @@ import trabalho1.LAParser.Exp_aritmeticaContext;
 import trabalho1.LAParser.ExpressaoContext;
 import trabalho1.LAParser.FatorContext;
 import trabalho1.LAParser.Fator_logicoContext;
+import trabalho1.LAParser.Ident_paramContext;
 import trabalho1.LAParser.Mais_varContext;
 import trabalho1.LAParser.Op_adicaoContext;
 import trabalho1.LAParser.Op_multiplicacaoContext;
@@ -31,13 +32,21 @@ import trabalho1.LAParser.Outros_fatores_logicosContext;
 import trabalho1.LAParser.Outros_identContext;
 import trabalho1.LAParser.Outros_termosContext;
 import trabalho1.LAParser.Outros_termos_logicosContext;
+import trabalho1.LAParser.ParametroContext;
+import trabalho1.LAParser.Parametros_opcionalContext;
 import trabalho1.LAParser.ParcelaContext;
 import trabalho1.LAParser.Parcela_logicaContext;
 import trabalho1.LAParser.Parcela_nao_unarioContext;
 import trabalho1.LAParser.Parcela_unarioContext;
+import trabalho1.LAParser.Ponteiros_opcionaisContext;
 import trabalho1.LAParser.ProgramaContext;
+import trabalho1.LAParser.SelecaoContext;
+import trabalho1.LAParser.Senao_opcionalContext;
 import trabalho1.LAParser.TermoContext;
 import trabalho1.LAParser.Termo_logicoContext;
+import trabalho1.LAParser.Tipo_basicoContext;
+import trabalho1.LAParser.Tipo_basico_identContext;
+import trabalho1.LAParser.Tipo_estendidoContext;
 import trabalho1.LAParser.VariavelContext;
 
 /**
@@ -77,10 +86,10 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     }
     
     public String convertType(String type) {
-        if (type.equals("inteiro"))
-            return "int";
-        else if (type.equals("real"))
-            return "float";
+        if (type.contains("inteiro"))
+            return "int" + type.replace("inteiro", "").replace("^","*");
+        else if (type.contains("real"))
+            return "float" + type.replace("real", "").replace("^","*");
         else if (type.equals("logico"))
             return "bool";
         else return "char";
@@ -125,7 +134,6 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         removeIdent();
         addLine("}");       
         return null;
-        //return super.visitPrograma(ctx); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -135,17 +143,20 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         else
             visitDeclaracao_global(ctx.declaracao_global());
         return null;
-        //return super.visitDecl_local_global(ctx); //To change body of generated methods, choose Tools | Templates.
     } 
 
     @Override
     public Void visitDeclaracao_global(Declaracao_globalContext ctx) {
         List<CmdContext> cmds = ctx.comandos().cmd();
         if(ctx.tipo_estendido() == null)
-            addLine("void " + ctx.IDENT().getText() + "() {" );
+            appendIdentText("void " + ctx.IDENT().getText() + "(");
         else {
-            
+            appendIdentText("");
+            visitTipo_estendido(ctx.tipo_estendido());
+            appendText(ctx.IDENT().getText() + "(");
         }
+        visitParametros_opcional(ctx.parametros_opcional());
+        appendText(") {\n");
         addIdent();
         for(CmdContext cmd : cmds)
             visitCmd(cmd);
@@ -153,7 +164,55 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         addLine("}");
         addLine("");
         return null;
-        //return super.visitDeclaracao_global(ctx); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Void visitParametros_opcional(Parametros_opcionalContext ctx) {
+        if(ctx.parametro() != null)
+            visitParametro(ctx.parametro());
+        return null;
+    }
+
+    @Override
+    public Void visitParametro(ParametroContext ctx) {
+        visitTipo_estendido(ctx.tipo_estendido());
+        visitIdent_param(ctx.ident_param());
+        return null;
+    }
+
+    @Override
+    public Void visitTipo_estendido(Tipo_estendidoContext ctx) {
+        visitTipo_basico_ident(ctx.tipo_basico_ident());
+        visitPonteiros_opcionais(ctx.ponteiros_opcionais());
+        return null;
+    }
+
+    @Override
+    public Void visitTipo_basico_ident(Tipo_basico_identContext ctx) {
+        visitTipo_basico(ctx.tipo_basico());
+        return null;
+    }
+
+    @Override
+    public Void visitTipo_basico(Tipo_basicoContext ctx) {
+        if(ctx.tipodado.equals("literal"))
+            appendText("char*");
+        else
+            appendText(convertType(ctx.tipodado));
+        return null;
+    }
+
+    @Override
+    public Void visitPonteiros_opcionais(Ponteiros_opcionaisContext ctx) {
+        appendText(ctx.ponteiros/*.replace("^", "*")*/ + " ");
+        return null;
+    }
+
+    @Override
+    public Void visitIdent_param(Ident_paramContext ctx) {
+        visitPonteiros_opcionais(ctx.ponteiros_opcionais());
+        appendText(ctx.IDENT().getText() + SvisitDimensao(ctx.dimensao()) + SvisitOutros_ident(ctx.outros_ident()));
+        return null;
     }
     
     @Override
@@ -168,7 +227,9 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 appendText(dim + ";\n");
                 break;
             case 2:
-                addLine("#define " + ctx.IDENT.getText());
+                appendIdentText("#define " + ctx.IDENT.getText() + " ");
+                visitValor_constante(ctx.valor_constante());
+                appendText("\n\n");
                 break;
             case 3:
                 addLine("typedef ");
@@ -182,6 +243,12 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         String var = ctx.IDENT.getText();
         appendText(var + SvisitDimensao(ctx.dimensao()));
         visitMais_var(ctx.mais_var());
+        return null;
+    }
+
+    @Override
+    public Void visitValor_constante(LAParser.Valor_constanteContext ctx) {
+        appendText(ctx.getText());
         return null;
     }
 
@@ -451,6 +518,12 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 visitSenao_opcional(ctx.senao_opcional());
                 break;
             case 4:
+                addLine("switch(" + SvisitExp_aritmetica(ctx.exp_aritmetica(0)) + ") {");
+                addIdent();
+                visitSelecao(ctx.selecao());
+                visitCaseDefault(ctx.senao_opcional());
+                removeIdent();
+                addLine("}");
                 break;
             case 5:
                 String var = ctx.IDENT().getText();
@@ -479,7 +552,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 for (CmdContext cd : cds)
                     visitCmd(cd);
                 removeIdent();
-                addLine("} while(" + SvisitExpressao(ctx.expressao()) + ")");
+                addLine("} while(" + SvisitExpressao(ctx.expressao()) + ");");
                 break;
             case 8:
                 addLine("*" + ctx.IDENT().getText() + SvisitOutros_ident(ctx.outros_ident()) + 
@@ -496,12 +569,44 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 appendText(";\n");
                 break;
             case 11:
-                addLine("return " + SvisitExpressao(ctx.expressao()));
+                addLine("return " + SvisitExpressao(ctx.expressao()) + ";");
                 break;
         }
         return null;
     }
 
+    @Override
+    public Void visitSelecao(SelecaoContext ctx) {
+        addLine("case " + ctx.constantes().numero_intervalo().NUM_INT().getText() + ":");
+        addIdent();
+        List<CmdContext> cmds = ctx.comandos().cmd();
+        for(CmdContext cmd : cmds)
+            visitCmd(cmd);
+        addLine("break;");
+        removeIdent();
+        visitMais_selecao(ctx.mais_selecao());
+        return null;
+    }
+
+    @Override
+    public Void visitMais_selecao(LAParser.Mais_selecaoContext ctx) {
+        if(ctx.selecao() != null)
+            visitSelecao(ctx.selecao());
+        return null;
+    }
+
+    public Void visitCaseDefault(Senao_opcionalContext ctx) {
+        if(ctx.comandos() != null) {
+            addLine("default:");
+            addIdent();
+            List<CmdContext> cmds = ctx.comandos().cmd();
+            for(CmdContext cmd : cmds)
+                visitCmd(cmd);
+            removeIdent();
+        }
+        return null;
+    }
+    
     @Override
     public Void visitAtribuicao(AtribuicaoContext ctx) {
         appendText(SvisitOutros_ident(ctx.outros_ident()) + SvisitDimensao(ctx.dimensao()) + " = " + SvisitExpressao(ctx.expressao()));
@@ -509,7 +614,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     }
 
     @Override
-    public Void visitSenao_opcional(LAParser.Senao_opcionalContext ctx) {
+    public Void visitSenao_opcional(Senao_opcionalContext ctx) {
         if(ctx.comandos() != null) {
             addLine("else {");
             addIdent();
