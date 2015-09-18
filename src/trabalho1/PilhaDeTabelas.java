@@ -26,6 +26,14 @@ public class PilhaDeTabelas {
     public TabelaDeSimbolos topo() {
         return pilha.peek();
     }
+    
+    public TabelaDeSimbolos tabelaGlobal() {
+        for (TabelaDeSimbolos ts : pilha) {
+            if(ts.getName().equals("global"))
+                    return ts;
+        }
+        return null;
+    }
 
     public boolean existeSimbolo(String nome) {
         for (TabelaDeSimbolos ts : pilha) {

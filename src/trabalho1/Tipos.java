@@ -38,6 +38,8 @@ public class Tipos {
             if (key.equals(tipo)) {
                 List<Pair> value = entry.getValue();
                 for (Pair pair : value) {
+                    //Mensagens.teste(pair.a.toString());
+                    //Mensagens.teste(pair.b.toString());
                     if(pair.a.toString().equals(atributo))
                         return true;
                 }
@@ -45,6 +47,18 @@ public class Tipos {
             }
         }
         return false;
+    }
+    
+    public String getTipoAtr(String atributo) {
+        for (Map.Entry<String, List<Pair>> entry : tipos.entrySet()) {
+            String key = entry.getKey();
+            List<Pair> value = entry.getValue();
+            for (Pair pair : value) {
+                if(pair.a.toString().equals(atributo))
+                    return pair.b.toString();
+            }
+        }
+        return "";
     }
     
     public boolean existeTipo(String tipo) {

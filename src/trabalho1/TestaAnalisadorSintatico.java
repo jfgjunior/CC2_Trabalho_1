@@ -19,16 +19,27 @@ public class TestaAnalisadorSintatico {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         LAParser parser = new LAParser(tokens);
         parser.addErrorListener(new LAErrorListener(out));
+        LAParser.ProgramaContext raiz = null;
         try {
-            parser.programa();
+            raiz = parser.programa();    
         } catch(ParseCancellationException pce) {
             if (pce.getMessage() != null)
                 out.println(pce.getMessage());
         }
-        String erros_semanticos = Mensagens.getText();
+
         if(!out.isModificado())
-            out.print(erros_semanticos);
-        out.println("Fim da compilacao");
+            if(Mensagens.isModificado()) {
+                String erros_semanticos = Mensagens.getText();
+                out.print(erros_semanticos);
+                out.println("Fim da compilacao");
+            }
+            else {
+                GeradorDeCodigo gerador = new GeradorDeCodigo();
+                gerador.visitPrograma(raiz);
+                out.print(gerador.getCodigo());
+            }
+        else
+            out.println("Fim da compilacao");
 
         File f = new File(args[1]);
         PrintWriter pw = new PrintWriter(f);
