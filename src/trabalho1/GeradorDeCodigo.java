@@ -7,6 +7,7 @@ package trabalho1;
 
 import java.util.List;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import trabalho1.LAParser.AtribuicaoContext;
 import trabalho1.LAParser.Chamada_partesContext;
 import trabalho1.LAParser.CmdContext;
 import trabalho1.LAParser.CorpoContext;
@@ -139,7 +140,18 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
 
     @Override
     public Void visitDeclaracao_global(Declaracao_globalContext ctx) {
-        
+        List<CmdContext> cmds = ctx.comandos().cmd();
+        if(ctx.tipo_estendido() == null)
+            addLine("void " + ctx.IDENT().getText() + "() {" );
+        else {
+            
+        }
+        addIdent();
+        for(CmdContext cmd : cmds)
+            visitCmd(cmd);
+        removeIdent();
+        addLine("}");
+        addLine("");
         return null;
         //return super.visitDeclaracao_global(ctx); //To change body of generated methods, choose Tools | Templates.
     }
@@ -231,7 +243,6 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     }
 
     public String SvisitOp_multiplicacao(Op_multiplicacaoContext ctx) {
-        // NAO SEI SE ESTA CERTO
         return ctx.getText();
     }
 
@@ -328,8 +339,9 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     }
 
     public String SvisitOp_nao(Op_naoContext ctx) {
-        //appendText(ctx.getText());
-        return ctx.getText();
+        if(ctx.getText().equals("nao"))
+            return "!";
+        return "";
     }
 
     public String SvisitParcela_logica(Parcela_logicaContext ctx) {
@@ -358,8 +370,14 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     }
 
     public String SvisitOp_relacional(LAParser.Op_relacionalContext ctx) {
-        if(ctx != null)
-            return ctx.getText();
+        if(ctx != null) {
+            String op = ctx.getText();
+            if(op.equals("="))
+                op = " == ";
+            else if (op.equals("<>"))
+                op = " != ";
+            return op;
+        }
         return "";
     }
 
@@ -390,13 +408,15 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     
     @Override
     public Void visitCmd(CmdContext ctx) {
-        char type;
-        if(ctx.tipoVar.equals("inteiro"))
-            type = 'd';
-        else if(ctx.tipoVar.equals("real"))
-            type = 'f';
-        else
-            type = 's';
+        char type = ' ';
+        if(ctx.tipoVar != null) {
+            if(ctx.tipoVar.equals("inteiro"))
+                type = 'd';
+            else if(ctx.tipoVar.equals("real"))
+                type = 'f';
+            else
+                type = 's';
+        }
         //String var = ctx.nameVar;
         
         switch (ctx.tipoCmd) {
@@ -421,33 +441,102 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 //addLine("printf(" + SvisitExpressao(ctx.expressao()) + SvisitMais_expressao(ctx.mais_expressao()) + ")");
                 break;
             case 3:
-                codigo.append("\tif\n");
+                addLine("if(" + SvisitExpressao(ctx.expressao()) + ") {");
+                addIdent();
+                List<CmdContext> cmds = ctx.comandos().cmd();
+                for (CmdContext cmd : cmds)
+                    visitCmd(cmd);
+                removeIdent();
+                addLine("}");
+                visitSenao_opcional(ctx.senao_opcional());
                 break;
             case 4:
                 break;
             case 5:
-                codigo.append("\tfor\n");
+                String var = ctx.IDENT().getText();
+                addLine("for(" + var + " = " + SvisitExp_aritmetica(ctx.exp_aritmetica(0)) + "; " + var + 
+                        " <= " + SvisitExp_aritmetica(ctx.exp_aritmetica(1)) + "; " + var + "++) {");
+                addIdent();
+                List<CmdContext> commands = ctx.comandos().cmd();
+                for (CmdContext c : commands)
+                    visitCmd(c);
+                removeIdent();
+                addLine("}");
                 break;
             case 6:
-                codigo.append("\twhile\n");
+                addLine("while(" + SvisitExpressao(ctx.expressao()) + ") {");
+                addIdent();
+                List<CmdContext> comds = ctx.comandos().cmd();
+                for (CmdContext cm : comds)
+                    visitCmd(cm);
+                removeIdent();
+                addLine("}");
                 break;
             case 7:
-                codigo.append("\tdo while\n");
+                addLine("do {");
+                addIdent();
+                List<CmdContext> cds = ctx.comandos().cmd();
+                for (CmdContext cd : cds)
+                    visitCmd(cd);
+                removeIdent();
+                addLine("} while(" + SvisitExpressao(ctx.expressao()) + ")");
                 break;
             case 8:
+                addLine("*" + ctx.IDENT().getText() + SvisitOutros_ident(ctx.outros_ident()) + 
+                        SvisitDimensao(ctx.dimensao()) + " = " + SvisitExpressao(ctx.expressao()) + ";");
                 break;
             case 9:
-                String id = ctx.identificador().IDENT.getText();
-                codigo.append("\t" + id + "();");
+                appendIdentText(ctx.IDENT().getText());
+                visitChamada(ctx.chamada());
+                appendText(";\n");
                 break;
             case 10:
+                appendIdentText(ctx.IDENT().getText());
+                visitAtribuicao(ctx.atribuicao());
+                appendText(";\n");
                 break;
             case 11:
+                addLine("return " + SvisitExpressao(ctx.expressao()));
                 break;
         }
         return null;
     }
 
+    @Override
+    public Void visitAtribuicao(AtribuicaoContext ctx) {
+        appendText(SvisitOutros_ident(ctx.outros_ident()) + SvisitDimensao(ctx.dimensao()) + " = " + SvisitExpressao(ctx.expressao()));
+        return null;
+    }
+
+    @Override
+    public Void visitSenao_opcional(LAParser.Senao_opcionalContext ctx) {
+        if(ctx.comandos() != null) {
+            addLine("else {");
+            addIdent();
+            List<CmdContext> cmds = ctx.comandos().cmd();
+            for (CmdContext cmd : cmds) {
+                visitCmd(cmd);
+            }
+            removeIdent();
+            addLine("}");
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitChamada(LAParser.ChamadaContext ctx) {
+        appendText("(");
+        visitArgumentos_opcional(ctx.argumentos_opcional());
+        appendText(")");
+        return null;
+    }
+
+    @Override
+    public Void visitArgumentos_opcional(LAParser.Argumentos_opcionalContext ctx) {
+        appendText(SvisitExpressao(ctx.expressao()) + SvisitMais_expressao(ctx.mais_expressao()));
+        return null;
+    }
+    
     public String getCodigo() {
         return codigo.toString();
     }
