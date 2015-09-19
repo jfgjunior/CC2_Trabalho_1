@@ -1,5 +1,6 @@
 package trabalho1;
 
+import java.util.Arrays;
 import java.util.List;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import trabalho1.LAParser.Argumentos_opcionalContext;
@@ -42,15 +43,18 @@ import trabalho1.LAParser.Parcela_nao_unarioContext;
 import trabalho1.LAParser.Parcela_unarioContext;
 import trabalho1.LAParser.Ponteiros_opcionaisContext;
 import trabalho1.LAParser.ProgramaContext;
+import trabalho1.LAParser.RegistroContext;
 import trabalho1.LAParser.SelecaoContext;
 import trabalho1.LAParser.Senao_opcionalContext;
 import trabalho1.LAParser.TermoContext;
 import trabalho1.LAParser.Termo_logicoContext;
+import trabalho1.LAParser.TipoContext;
 import trabalho1.LAParser.Tipo_basicoContext;
 import trabalho1.LAParser.Tipo_basico_identContext;
 import trabalho1.LAParser.Tipo_estendidoContext;
 import trabalho1.LAParser.Valor_constanteContext;
 import trabalho1.LAParser.VariavelContext;
+import trabalho1.LAParser.Variavel_registroContext;
 
 /**
  *
@@ -95,7 +99,9 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
             return "float" + type.replace("real", "").replace("^","*");
         else if (type.equals("logico"))
             return "bool";
-        else return "char";
+        else if (type.equals("literal"))
+            return "char";
+        else return type;
     }
     
     private char getTypeMap(String type) {
@@ -222,12 +228,21 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     public Void visitDeclaracao_local(Declaracao_localContext ctx) {
         switch(ctx.tipoDec) {
             case 1:
-                String dim = "";
-                if(ctx.tipoVar.equals("literal"))
-                    dim = "[80]";
-                appendIdentText(convertType(ctx.tipoVar) + " ");
-                visitVariavel(ctx.variavel());
-                appendText(dim + ";\n");
+                if(ctx.tipoVar.equals("registro")) {
+                    addLine("struct {");
+                    addIdent();
+                    visitRegistro(ctx.variavel().tipo().registro());
+                    removeIdent();
+                    addLine("} " + ctx.variavel().IDENT().getText() + ";");
+                }
+                else {
+                    String dim = "";
+                    if(ctx.tipoVar.equals("literal"))
+                        dim = "[80]";
+                    appendIdentText(convertType(ctx.tipoVar) + " ");
+                    visitVariavel(ctx.variavel());
+                    appendText(dim + ";\n");
+                }
                 break;
             case 2:
                 appendIdentText("#define " + ctx.IDENT.getText() + " ");
@@ -235,9 +250,37 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 appendText("\n\n");
                 break;
             case 3:
-                addLine("typedef ");
+                addLine("typedef struct {");
+                addIdent();
+                visitTipo(ctx.tipo());
+                removeIdent();
+                addLine("} " + ctx.IDENT().getText() + ";");
                 break;
         }
+        return null;
+    }
+
+    @Override
+    public Void visitTipo(TipoContext ctx) {
+        visitRegistro(ctx.registro());
+        return null;
+    }
+
+    @Override
+    public Void visitRegistro(RegistroContext ctx) {
+        List<Variavel_registroContext> atrs = ctx.variavel_registro();
+        for(Variavel_registroContext atr : atrs)
+            visitVariavel_registro(atr);
+        return null;
+    }
+
+    @Override
+    public Void visitVariavel_registro(Variavel_registroContext ctx) {
+        String t = ctx.tipo().tipodado;
+        String dim = "";
+        if(t.equals("literal"))
+            dim = "[80]";
+        addLine(convertType(ctx.tipo().tipodado) + " " + ctx.IDENT().getText() + dim + ";");
         return null;
     }
 
@@ -470,8 +513,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         List<ExpressaoContext> exps = ctx.expressao();
         String mais_exp = "";
         for(ExpressaoContext e : exps) {
-            //appendText(", ");
-            mais_exp += SvisitExpressao(e);
+            mais_exp += "," + SvisitExpressao(e);
         }
         return mais_exp;
     }
@@ -505,7 +547,9 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 String[] parts = tipo_e.split(",");
                 for(int i = 0; i < tipos_mais.size(); i++) {
                     tipo = getTypeMap(convertType(tipos_mais.get(i)));
-                    addLine("printf(\"%"+ tipo +"\"," + parts[i] + ");");
+                    if(parts[i+1].contains(".idade"))
+                        tipo = 'd';
+                    addLine("printf(\"%"+ tipo +"\"," + parts[i+1] + ");");
                 }
                 
                 //addLine("printf(" + SvisitExpressao(ctx.expressao()) + SvisitMais_expressao(ctx.mais_expressao()) + ")");
@@ -567,9 +611,16 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
                 appendText(";\n");
                 break;
             case 10:
-                appendIdentText(ctx.IDENT().getText());
-                visitAtribuicao(ctx.atribuicao());
-                appendText(";\n");
+                if(ctx.atribuicao().type.equals("literal")) {
+                    appendIdentText("strcpy(" + ctx.IDENT().getText());
+                    visitAtribuicao2(ctx.atribuicao());
+                    appendText(");\n");
+                }
+                else {
+                    appendIdentText(ctx.IDENT().getText());
+                    visitAtribuicao(ctx.atribuicao());
+                    appendText(";\n");
+                }
                 break;
             case 11:
                 addLine("return " + SvisitExpressao(ctx.expressao()) + ";");
@@ -577,7 +628,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         }
         return null;
     }
-
+    
     @Override
     public Void visitSelecao(SelecaoContext ctx) {
         addLine("case " + ctx.constantes().numero_intervalo().NUM_INT().getText() + ":");
@@ -616,6 +667,11 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    public Void visitAtribuicao2(AtribuicaoContext ctx) {
+        appendText(SvisitOutros_ident(ctx.outros_ident()) + SvisitDimensao(ctx.dimensao()) + "," + SvisitExpressao(ctx.expressao()));
+        return null;
+    }
+    
     @Override
     public Void visitSenao_opcional(Senao_opcionalContext ctx) {
         if(ctx.comandos() != null) {

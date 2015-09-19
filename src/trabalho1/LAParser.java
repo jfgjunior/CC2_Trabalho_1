@@ -1909,10 +1909,12 @@ public class LAParser extends Parser {
 				                                if(((CmdContext)_localctx).atribuicao.indice != -1){
 				                                      Mensagens.erroVariavelNaoCompativel((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null)+"["+((CmdContext)_localctx).atribuicao.indice+"]", (((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getLine():0));
 				                                }else if(!((CmdContext)_localctx).atribuicao.name.equals("")){
-				                                     if(!tipos.getTipoAtr(((CmdContext)_localctx).atribuicao.name).equals(pilhaDeTabelas.getTypeData(((CmdContext)_localctx).atribuicao.type))) {
+				                                     if(!tipos.getTipoAtr(((CmdContext)_localctx).atribuicao.name).equals(((CmdContext)_localctx).atribuicao.type)) {
 				                                            if(tipos.getTipoAtr(((CmdContext)_localctx).atribuicao.name).equals("real") && ((CmdContext)_localctx).atribuicao.type.equals("inteiro")){
 				                                                //pass
 				                                            }else{
+				                                                //Mensagens.teste(tipos.getTipoAtr(((CmdContext)_localctx).atribuicao.name));
+				                                                //Mensagens.teste(((CmdContext)_localctx).atribuicao.type);
 				                                                Mensagens.erroVariavelNaoCompativel((((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getText():null)+"."+((CmdContext)_localctx).atribuicao.name, (((CmdContext)_localctx).IDENT!=null?((CmdContext)_localctx).IDENT.getLine():0));
 				                                            }                                       
 				                                     }else{}
@@ -2133,10 +2135,11 @@ public class LAParser extends Parser {
 			setState(459); ((AtribuicaoContext)_localctx).dimensao = dimensao();
 			setState(460); match(44);
 			setState(461); ((AtribuicaoContext)_localctx).expressao = expressao();
-			if(((AtribuicaoContext)_localctx).outros_ident.name.equals("")){
+			((AtribuicaoContext)_localctx).type =  ((AtribuicaoContext)_localctx).expressao.type;
+			                                            if(((AtribuicaoContext)_localctx).outros_ident.name.equals("")){
 			                                                if(!((AtribuicaoContext)_localctx).expressao.name.equals("")){
 			                                                     ((AtribuicaoContext)_localctx).compativel =  false;    
-			                                                     ((AtribuicaoContext)_localctx).name =  ((AtribuicaoContext)_localctx).expressao.name;
+			                                                     //((AtribuicaoContext)_localctx).name =  ((AtribuicaoContext)_localctx).expressao.name;
 			                                                }else{
 			                                                      ((AtribuicaoContext)_localctx).compativel =  ((AtribuicaoContext)_localctx).expressao.compativel; ((AtribuicaoContext)_localctx).type =  ((AtribuicaoContext)_localctx).expressao.type;
 			                                                 }

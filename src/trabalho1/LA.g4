@@ -236,10 +236,12 @@ cmd returns [ int tipoCmd, String nameVar,  String tipoVar]
                                 if($atribuicao.indice != -1){
                                       Mensagens.erroVariavelNaoCompativel($IDENT.text+"["+$atribuicao.indice+"]", $IDENT.line);
                                 }else if(!$atribuicao.name.equals("")){
-                                     if(!tipos.getTipoAtr($atribuicao.name).equals(pilhaDeTabelas.getTypeData($atribuicao.type))) {
+                                     if(!tipos.getTipoAtr($atribuicao.name).equals($atribuicao.type)) {
                                             if(tipos.getTipoAtr($atribuicao.name).equals("real") && $atribuicao.type.equals("inteiro")){
                                                 //pass
                                             }else{
+                                                //Mensagens.teste(tipos.getTipoAtr($atribuicao.name));
+                                                //Mensagens.teste($atribuicao.type);
                                                 Mensagens.erroVariavelNaoCompativel($IDENT.text+"."+$atribuicao.name, $IDENT.line);
                                             }                                       
                                      }else{}
@@ -275,10 +277,11 @@ chamada : '(' argumentos_opcional ')';
 
 atribuicao returns [boolean compativel, String type, int indice, String name]
 @init {$type = ""; $name = "";}
-    : outros_ident dimensao '<-' expressao {if($outros_ident.name.equals("")){
+    : outros_ident dimensao '<-' expressao {$type = $expressao.type;
+                                            if($outros_ident.name.equals("")){
                                                 if(!$expressao.name.equals("")){
                                                      $compativel = false;    
-                                                     $name = $expressao.name;
+                                                     //$name = $expressao.name;
                                                 }else{
                                                       $compativel = $expressao.compativel; $type = $expressao.type;
                                                  }
