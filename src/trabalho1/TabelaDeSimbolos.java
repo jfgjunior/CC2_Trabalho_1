@@ -30,6 +30,10 @@ public class TabelaDeSimbolos {
         }
     }
     
+    public String getName() {
+        return escopo;
+    }
+    
     public boolean existeSimbolo(String nome) {
         for(EntradaTabelaDeSimbolos etds:simbolos) {
             if(etds.getNome().equals(nome)) {

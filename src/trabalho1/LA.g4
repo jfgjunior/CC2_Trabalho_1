@@ -171,11 +171,11 @@ declaracao_global : 'procedimento' IDENT
                      funcoes.addFuncao($IDENT.text);}
                     '(' parametros_opcional ')' declaracoes_locais comandos 'fim_procedimento'
                     {pilhaDeTabelas.desempilhar();}
-                  | 'funcao' IDENT 
-                    {pilhaDeTabelas.topo().adicionarSimbolo($IDENT.text, "", "funcao");
-                     pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao_"+$IDENT.text));
-                     funcoes.addFuncao($IDENT.text);}
-                    '(' parametros_opcional ')' ':' tipo_estendido declaracoes_locais comandos 'fim_funcao'
+                  | 'funcao' IDENT {funcoes.addFuncao($IDENT.text);
+                                    pilhaDeTabelas.empilhar(new TabelaDeSimbolos("funcao_"+$IDENT.text));} 
+                    '(' parametros_opcional ')' ':' tipo_estendido 
+                    {pilhaDeTabelas.tabelaGlobal().adicionarSimbolo($IDENT.text, $tipo_estendido.tipodado, "funcao");}
+                    declaracoes_locais comandos 'fim_funcao'
                     {pilhaDeTabelas.desempilhar();};
 
 //parametro opcional é formado por parametro
@@ -236,10 +236,12 @@ cmd returns [ int tipoCmd, String nameVar,  String tipoVar]
                                 if($atribuicao.indice != -1){
                                       Mensagens.erroVariavelNaoCompativel($IDENT.text+"["+$atribuicao.indice+"]", $IDENT.line);
                                 }else if(!$atribuicao.name.equals("")){
-                                     if(!tipos.getTipoAtr($atribuicao.name).equals(pilhaDeTabelas.getTypeData($atribuicao.type))) {
+                                     if(!tipos.getTipoAtr($atribuicao.name).equals($atribuicao.type)) {
                                             if(tipos.getTipoAtr($atribuicao.name).equals("real") && $atribuicao.type.equals("inteiro")){
                                                 //pass
                                             }else{
+                                                //Mensagens.teste(tipos.getTipoAtr($atribuicao.name));
+                                                //Mensagens.teste($atribuicao.type);
                                                 Mensagens.erroVariavelNaoCompativel($IDENT.text+"."+$atribuicao.name, $IDENT.line);
                                             }                                       
                                      }else{}
@@ -275,10 +277,11 @@ chamada : '(' argumentos_opcional ')';
 
 atribuicao returns [boolean compativel, String type, int indice, String name]
 @init {$type = ""; $name = "";}
-    : outros_ident dimensao '<-' expressao {if($outros_ident.name.equals("")){
+    : outros_ident dimensao '<-' expressao {$type = $expressao.type;
+                                            if($outros_ident.name.equals("")){
                                                 if(!$expressao.name.equals("")){
                                                      $compativel = false;    
-                                                     $name = $expressao.name;
+                                                     //$name = $expressao.name;
                                                 }else{
                                                       $compativel = $expressao.compativel; $type = $expressao.type;
                                                  }
@@ -407,7 +410,8 @@ parcela_unario returns [String type, int indice, String name, int tipoParc]
                                 }
                                 if (erro == true)
                                     Mensagens.erroIncompatibilidadeParametros($IDENT.text, $IDENT.line);
-                            } $name = $chamada_partes.name;
+                            } 
+                            $name = $chamada_partes.name;;
                             $tipoParc = 2;}
     | NUM_INT {$type = "inteiro"; $indice = Integer.parseInt($NUM_INT.text); $name = $NUM_INT.text; $tipoParc = 3;}
     | NUM_REAL {$type = "real"; $name = $NUM_REAL.text; $tipoParc = 4;}
