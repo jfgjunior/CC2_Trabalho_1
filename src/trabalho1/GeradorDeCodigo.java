@@ -58,23 +58,21 @@ import trabalho1.LAParser.Variavel_registroContext;
 
 
 
-//A classe GeradorDeCodigo faz a conversão do código da linguagem LA para C, utilizando a árvore da classe 
-// AbstractParseTreeVisitor para acessar elemento. Isso é possível pois a classe gerador estende da classe ,
-// LABaseVisitor que por sua vez estende de AbstractParseTreeVisitor.
+//A classe GeradorDeCodigo faz a conversão do código da linguagem LA para C, utilizando a árvore gerada 
+// pelo parser para acessar os elementos.
 
 
 public class GeradorDeCodigo extends LABaseVisitor<Void> {
+    // codigo: StringBuffer que acumula o código gerado
+    // ident: String que controla a identação do código
 
     private StringBuffer codigo;
     private String ident;
-    boolean printControl;
 
-//Ao ser inicializada a classe GeradorDeCodigo possui uma StringBuffer, um identificador(vazio), e um controle
-//de impressao setado com falso
+
     public GeradorDeCodigo() {
         codigo = new StringBuffer();
         ident = "";
-        printControl = false;
     }
     
     //adiciona um linha do código de forma identada e passa para a linha seguinte
@@ -82,11 +80,12 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         codigo.append(ident + line + '\n');
     }
     
-    //ident passa ter um TAB(espço)
+    //ident passa a ter um TAB
     private void addIdent() {
         ident += "\t";
     }
     
+    //remove um TAB
     private void removeIdent() {
         ident = ident.substring(0, ident.length()-1);
     }
@@ -438,7 +437,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return parc;
     }
 
-    //Uma parcela nao unario pode ser uma string ou uma referencia para uma variavel
+    //Uma parcela nao unario pode ser uma string ou uma referencia para uma variável
     public String SvisitParcela_nao_unario(Parcela_nao_unarioContext ctx) {
         if(ctx.type.equals("literal")) {
             return ctx.CADEIA.getText();
@@ -448,7 +447,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         }
     }
 
-    //permite a existencia de n identificadores.
+    //permite a existência de n identificadores.
     public String SvisitOutros_ident(Outros_identContext ctx) {
         List<TerminalNode> idents = ctx.IDENT();
         List<DimensaoContext> dims = ctx.dimensao();
@@ -470,7 +469,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return "";
     }
 
-    //Os termos logicos extras sao precedidos, cada um deles por um OR
+    //Os termos logicos extras são precedidos cada um deles por um OR
     public String SvisitOutros_termos_logicos(Outros_termos_logicosContext ctx) {
         if (ctx.termo_logico() != null) {
             return " || " + SvisitTermo_logico(ctx.termo_logico()) + SvisitOutros_termos_logicos(ctx.outros_termos_logicos());

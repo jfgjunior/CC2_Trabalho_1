@@ -1,16 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package trabalho1;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-//A classe Funcoes foi criada, devido a necessidade de armazenar o nome de uma funçao e seus respectivos parametros
+//A classe Funcoes foi criada devido à necessidade de armazenar o nome de uma função e seus respectivos parâmetros.
+//Implementada em forma de pilha para facilitar a inserção de atributos, que são inseridos no topo.
 
 public class Funcoes {
     private LinkedList<List<String>> pilha;

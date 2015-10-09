@@ -9,6 +9,8 @@ package trabalho1;
  * @author daniel
  */
 public class Mensagens {
+    // Classe que adiciona ao arquivo de saída mensagens de erro semântico
+    
     private static StringBuffer text = new StringBuffer();
     private static boolean modificado = false;
     
@@ -49,8 +51,5 @@ public class Mensagens {
     public static boolean isModificado() {
         return modificado;
     }
-     
-    public static void teste(String a) {
-        text.append("---------------\n"+a).append('\n');
-    }
+    
 }
