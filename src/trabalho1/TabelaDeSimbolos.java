@@ -11,6 +11,9 @@ import java.util.List;
  *
  * @author daniel
  */
+
+//As funçoes de adicionarSimbolos foram alteradas para se adequar aos atributos que foram adicionados.
+
 public class TabelaDeSimbolos {
     private String escopo;
     private List<EntradaTabelaDeSimbolos> simbolos;
@@ -52,6 +55,7 @@ public class TabelaDeSimbolos {
         return "";
     }
     
+    //Metodo adicionado para retornar o tipo de uma entrada na tabela de simbolos
     public String getVarTipo(String nome) {
         for(EntradaTabelaDeSimbolos etds:simbolos) {
             if(etds.getNome().equals(nome)) {
@@ -61,6 +65,7 @@ public class TabelaDeSimbolos {
         return "false";
     }
     
+    //Retorna o escopo associado a tabela
     public String getType() {
         if (escopo.contains("funcao"))
             return "funcao";

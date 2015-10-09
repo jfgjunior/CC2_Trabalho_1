@@ -27,6 +27,7 @@ public class PilhaDeTabelas {
         return pilha.peek();
     }
     
+    //Retorna a tabela correspondente ao escopo global
     public TabelaDeSimbolos tabelaGlobal() {
         for (TabelaDeSimbolos ts : pilha) {
             if(ts.getName().equals("global"))
@@ -44,6 +45,7 @@ public class PilhaDeTabelas {
         return false;
     }
     
+    //Checa em todas as tabelas da pilha e retorna o tipo da variavel
     public String getTypeData(String nome) {
         for(TabelaDeSimbolos ts : pilha) {
             if(ts.existeSimbolo(nome)) {
@@ -52,6 +54,7 @@ public class PilhaDeTabelas {
         }   
         return "";
     }
+    
     
     public String getVarTipo(String nome) {
         for (TabelaDeSimbolos ts : pilha) {

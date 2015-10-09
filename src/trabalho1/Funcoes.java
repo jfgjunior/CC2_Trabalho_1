@@ -10,10 +10,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- *
- * @author Fabioclug
- */
+//A classe Funcoes foi criada, devido a necessidade de armazenar o nome de uma funçao e seus respectivos parametros
+
 public class Funcoes {
     private LinkedList<List<String>> pilha;
     

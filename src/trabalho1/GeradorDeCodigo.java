@@ -56,26 +56,33 @@ import trabalho1.LAParser.Valor_constanteContext;
 import trabalho1.LAParser.VariavelContext;
 import trabalho1.LAParser.Variavel_registroContext;
 
-/**
- *
- * @author fernando
- */
+
+
+//A classe GeradorDeCodigo faz a conversão do código da linguagem LA para C, utilizando a árvore da classe 
+// AbstractParseTreeVisitor para acessar elemento. Isso é possível pois a classe gerador estende da classe ,
+// LABaseVisitor que por sua vez estende de AbstractParseTreeVisitor.
+
+
 public class GeradorDeCodigo extends LABaseVisitor<Void> {
 
     private StringBuffer codigo;
     private String ident;
     boolean printControl;
 
+//Ao ser inicializada a classe GeradorDeCodigo possui uma StringBuffer, um identificador(vazio), e um controle
+//de impressao setado com falso
     public GeradorDeCodigo() {
         codigo = new StringBuffer();
         ident = "";
         printControl = false;
     }
     
+    //adiciona um linha do código de forma identada e passa para a linha seguinte
     private void addLine(String line) {
         codigo.append(ident + line + '\n');
     }
     
+    //ident passa ter um TAB(espço)
     private void addIdent() {
         ident += "\t";
     }
@@ -83,15 +90,17 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
     private void removeIdent() {
         ident = ident.substring(0, ident.length()-1);
     }
-    
+    //adiciona o texto da linha
     private void appendText(String text) {
         codigo.append(text);
     }
     
+    //adiciona o texto da linha de forma identada(nao passa pra linha seguinte)
     private void appendIdentText(String text) {
         codigo.append(ident + text);
     }
     
+    //faz a conversão dos tipos para o formato em C, inclusive a conversao da notação de ponteiros
     public String convertType(String type) {
         if (type.contains("inteiro"))
             return "int" + type.replace("inteiro", "").replace("^","*");
@@ -104,6 +113,8 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         else return type;
     }
     
+    //Como em C é necessário o uso de %d, %f, entre outros, para a leitura ou escrita nesse trecho é feito
+    //um mapeamento dos tipos com seus "%" correto para utilizar na impressao ou leitura.
     private char getTypeMap(String type) {
         if (type.equals("int"))
             return 'd';
@@ -114,6 +125,10 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         else return 's';
     }
     
+    //sobrescreve a classe visitPrograma da classe LABaseVisitor. Aqui é configurado a estrutura basica de um
+    //programa em C, com os includes basicos, declaração da main, com suas devidas chaves, e o return 0
+    //ao final. Essa classe é a responsável por iniciar a construção do código em C, com suas declarações e 
+    //linhas de comandos.
     @Override
     public Void visitPrograma(ProgramaContext ctx) {
         addLine("#include <stdio.h>");
@@ -145,6 +160,8 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //De acordo com o parametro dec, que diz se a declaração que está sendo procurada é local ou global,
+    //chama o método correto para tratar a declaração solicitada.
     @Override
     public Void visitDecl_local_global(Decl_local_globalContext ctx) {
         if(ctx.dec == 1)
@@ -154,6 +171,8 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     } 
 
+    //Quando chamada realiza de forma correta a declaração global em C, através da conversão do conteúdo da LA.
+    //pode gerar procedimentos e funções 
     @Override
     public Void visitDeclaracao_global(Declaracao_globalContext ctx) {
         List<CmdContext> cmds = ctx.comandos().cmd();
@@ -175,6 +194,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //Permite adicionar ou não parametros
     @Override
     public Void visitParametros_opcional(Parametros_opcionalContext ctx) {
         if(ctx.parametro() != null)
@@ -202,6 +222,8 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //Verifica se é uma string; Caso seja faz o apendeText, senao chama o método convertType que tratará os
+    //outros casos
     @Override
     public Void visitTipo_basico(Tipo_basicoContext ctx) {
         if(ctx.tipodado.equals("literal"))
@@ -217,6 +239,8 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //cria ou nao um ponteiro ao chamar o metodo visitPonteiros_opcionais e adiciona um o mais parametros que 
+    //podem ser, inclusive um vetor
     @Override
     public Void visitIdent_param(Ident_paramContext ctx) {
         visitPonteiros_opcionais(ctx.ponteiros_opcionais());
@@ -224,6 +248,9 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
     
+    //Quando chamada realiza dentro do escopo correto a declaração local em C, através da conversão do conteúdo da LA.
+    //Uma declaracao local pode ser uma Struct tratada pelo método visitRegistro(), uma String(que tem um valor default de 80 caracters),
+    //um #define ou typedef struct
     @Override
     public Void visitDeclaracao_local(Declaracao_localContext ctx) {
         switch(ctx.tipoDec) {
@@ -266,6 +293,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //Permite uma lista de registros
     @Override
     public Void visitRegistro(RegistroContext ctx) {
         List<Variavel_registroContext> atrs = ctx.variavel_registro();
@@ -274,6 +302,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //Faz a criação de uma struct que possui um tipo e pode possuir dimensao
     @Override
     public Void visitVariavel_registro(Variavel_registroContext ctx) {
         String t = ctx.tipo().tipodado;
@@ -284,6 +313,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //Cria 1 variavel ou mais através do visitMais_var. Uma variavel pode ser um vetor.
     @Override
     public Void visitVariavel(VariavelContext ctx) {
         String var = ctx.IDENT.getText();
@@ -292,12 +322,14 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //adiciona um valor constante. Utilizado no #define
     @Override
     public Void visitValor_constante(Valor_constanteContext ctx) {
         appendText(ctx.getText());
         return null;
     }
 
+    //Permite ter uma lista de variaveis que podem ser um vetor
     @Override
     public Void visitMais_var(Mais_varContext ctx) {
         List<TerminalNode> vars = ctx.IDENT();
@@ -308,6 +340,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //retorna a dimensão calculada
     public String SvisitDimensao(DimensaoContext ctx) {
         String dim = "";
         for(Exp_aritmeticaContext exp : ctx.exp_aritmetica()) {
@@ -327,6 +360,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return SvisitFator(ctx.fator()) + SvisitOutros_fatores(ctx.outros_fatores());
     }
     
+
     public String SvisitOutros_termos(Outros_termosContext ctx) {
         List<Op_adicaoContext> ops = ctx.op_adicao();
         List<TermoContext> termos = ctx.termo();
@@ -359,6 +393,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return ctx.getText();
     }
 
+// Decide se a parcela a ser resolvida é unária ou nao e chama o método adequado para tratar
     public String SvisitParcela(ParcelaContext ctx) {
         if(ctx.parcelaTipo == 1) {
             return SvisitOp_unario(ctx.op_unario()) + SvisitParcela_unario(ctx.parcela_unario());
@@ -366,6 +401,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         else return SvisitParcela_nao_unario(ctx.parcela_nao_unario());
     }
 
+    //permite que tenha mais de uma parcela
     public String SvisitOutras_parcelas(Outras_parcelasContext ctx) {
         String outras_parc = "";
         for (ParcelaContext p : ctx.parcela()) {
@@ -378,6 +414,8 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return ctx.getText();
     }
 
+    //Verifica pel "tipoParc" se a parcela é uma adicao, uma multiplicação, um numero inteiro ou real, uma expressao
+    //e chama os métodos que as tratam ou retorna o valor da parcela
     public String SvisitParcela_unario(Parcela_unarioContext ctx) {
         String parc = "";
         switch(ctx.tipoParc) {
@@ -400,6 +438,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return parc;
     }
 
+    //Uma parcela nao unario pode ser uma string ou uma referencia para uma variavel
     public String SvisitParcela_nao_unario(Parcela_nao_unarioContext ctx) {
         if(ctx.type.equals("literal")) {
             return ctx.CADEIA.getText();
@@ -409,6 +448,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         }
     }
 
+    //permite a existencia de n identificadores.
     public String SvisitOutros_ident(Outros_identContext ctx) {
         List<TerminalNode> idents = ctx.IDENT();
         List<DimensaoContext> dims = ctx.dimensao();
@@ -430,6 +470,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return "";
     }
 
+    //Os termos logicos extras sao precedidos, cada um deles por um OR
     public String SvisitOutros_termos_logicos(Outros_termos_logicosContext ctx) {
         if (ctx.termo_logico() != null) {
             return " || " + SvisitTermo_logico(ctx.termo_logico()) + SvisitOutros_termos_logicos(ctx.outros_termos_logicos());
@@ -437,6 +478,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return "";
     }
 
+    //Um fator logico pode ser um nao operador ou uma parcela logica
     public String SvisitFator_logico(Fator_logicoContext ctx) {
         if (ctx != null) {
             return SvisitOp_nao(ctx.op_nao()) + SvisitParcela_logica(ctx.parcela_logica());
@@ -444,6 +486,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return "";
     }
     
+    //É possivel adicionar n fatores lógicos. Entre cada fator existe um AND
     public String SvisitOutros_fatores_logicos(Outros_fatores_logicosContext ctx) {
         if (ctx.fator_logico() != null) {
             return " && " + SvisitFator_logico(ctx.fator_logico()) + SvisitOutros_fatores_logicos(ctx.outros_fatores_logicos());
@@ -457,6 +500,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return "";
     }
 
+    //verifica pelo tipoParc se a parcela logica é true, false ou uma expressão e a retorna
     public String SvisitParcela_logica(Parcela_logicaContext ctx) {
         String parc = "";
         switch(ctx.tipoParc) {
@@ -482,6 +526,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         
     }
 
+    //Faz a conversao dos operadores de comparação igualdade e desigualdade para a linguagem C e os retorna.
     public String SvisitOp_relacional(Op_relacionalContext ctx) {
         if(ctx != null) {
             String op = ctx.getText();
@@ -493,6 +538,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         }
         return "";
     }
+
 
     public String SvisitChamada_partes(Chamada_partesContext ctx) {
         String chamada = "";
@@ -509,6 +555,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return chamada;
     }
 
+    //permite uma lista de expressao em que cada expressao é separada por ","
     public String SvisitMais_expressao(Mais_expressaoContext ctx) {
         List<ExpressaoContext> exps = ctx.expressao();
         String mais_exp = "";
@@ -517,7 +564,16 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         }
         return mais_exp;
     }
-    
+  
+  //visitCmd, um dos métodos centrais do código. Inicia verificando o tipo da variavel na linguagem LA e atribuindo
+  // na variavel "type" a letra equivalente à esse tipo. Se o programa entra no caso 1 ele verifica se type == s
+  //ou seja, se é String; Se for faz a adiciona o comando gets(responsavel pela leitura de String) e a variavel
+  //a ser lida, senao adiciona o scanf de forma correta. O caso dois ocorre quando vai ocorrer a inserção de um
+  //printf no programa. O caso 3 é quando ocorre um if, o 4 o switch, o 5 um for, no caso 6 um while e no caso 7
+  //um do while. Em todos esse casos a identação do código é ajusta, toda sua estrutura montada, com chaves, parametros
+  //declarações, comparações, atribuições, incrementos ou o que houver. Além disso dentro de cada um desses é adicionado
+  //os comandos de cada um desses escopos. O penultimo caso acontece na ocorrencia de uma atribuição. Caso seja uma String
+  //usa-se o strcpy, caso contratio uma atribuição comum. O ultimo insere o return seguido de um valor.
     @Override
     public Void visitCmd(CmdContext ctx) {
         char type = ' ';
@@ -629,6 +685,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
     
+    //cria o case utilizado no switch. A criação ja é feita de forma identada e com a estrutura correta
     @Override
     public Void visitSelecao(SelecaoContext ctx) {
         addLine("case " + ctx.constantes().numero_intervalo().NUM_INT().getText() + ":");
@@ -672,6 +729,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
     
+    //permite adicionar o else no programa após um if
     @Override
     public Void visitSenao_opcional(Senao_opcionalContext ctx) {
         if(ctx.comandos() != null) {
@@ -687,6 +745,7 @@ public class GeradorDeCodigo extends LABaseVisitor<Void> {
         return null;
     }
 
+    //adiona ( ) quando ocorre uma chamada.
     @Override
     public Void visitChamada(ChamadaContext ctx) {
         appendText("(");

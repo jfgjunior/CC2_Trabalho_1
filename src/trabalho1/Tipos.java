@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package trabalho1;
 
 import java.util.ArrayList;
@@ -16,6 +10,10 @@ import org.antlr.v4.runtime.misc.Pair;
  *
  * @author Fabioclug
  */
+
+//A classe Tipos armazena novos tipos, o que nesse caso, trata-se da criação de Structs, o que inclui 
+//o armazenamento dos seus atributos.
+
 public class Tipos {
     private Map<String, List<Pair>> tipos;
     
@@ -38,8 +36,6 @@ public class Tipos {
             if (key.equals(tipo)) {
                 List<Pair> value = entry.getValue();
                 for (Pair pair : value) {
-                    //Mensagens.teste(pair.a.toString());
-                    //Mensagens.teste(pair.b.toString());
                     if(pair.a.toString().equals(atributo))
                         return true;
                 }
